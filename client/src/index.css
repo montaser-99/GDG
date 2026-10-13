@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Cairo', sans-serif;
+  background-color: #0f172a;
+  color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 3rem;
+}
+
+.gdg-gradient-text {
+  background: linear-gradient(135deg, #4285f4 0%, #ea4335 33%, #fbbc04 66%, #34a853 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Print / PDF Specific Optimizations (ported from the original dashboard) */
+@media print {
+  @page {
+    margin: 12mm;
+    size: A4 portrait;
+  }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt;
+  }
+  .glass-card,
+  .print-card {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    margin-bottom: 1rem !important;
+    page-break-inside: avoid;
+  }
+  input,
+  textarea,
+  select {
+    border: none !important;
+    background: transparent !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+    font-weight: bold !important;
+    appearance: none;
+  }
+  .text-white,
+  .text-slate-200,
+  .text-slate-300,
+  .text-slate-400 {
+    color: #0f172a !important;
+  }
+  .bg-slate-900\/60,
+  .bg-slate-800\/40,
+  .bg-slate-900\/40,
+  .bg-slate-800 {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+  .print-badge {
+    border: 1px solid #94a3b8 !important;
+    color: #0f172a !important;
+    background-color: #f1f5f9 !important;
+  }
+  .print-section-header {
+    border-bottom: 2px solid #4285f4 !important;
+    color: #0f172a !important;
+  }
+}
