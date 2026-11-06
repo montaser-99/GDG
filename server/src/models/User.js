@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema(
       enum: ROLES,
       default: 'member',
     },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
     committee: {
       type: String,
       trim: true,
@@ -47,6 +52,7 @@ const userSchema = new mongoose.Schema(
     toJSON: {
       transform(doc, ret) {
         delete ret.password;
+        delete ret.tokenVersion;
         delete ret.__v;
         return ret;
       },

@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
 import evaluationRoutes from './src/routes/evaluationRoutes.js';
+import leaderboardRoutes from './src/routes/leaderboardRoutes.js';
 import { errorHandler, notFound } from './src/middleware/errorMiddleware.js';
 
 const app = express();
@@ -23,6 +24,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/evaluations', evaluationRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

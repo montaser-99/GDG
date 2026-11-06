@@ -71,42 +71,6 @@ export default function MetricsSection({ commScore, deadlineScore, isEditMode, o
         </div>
       </div>
 
-      {/* Strengths vs Areas for Improvement */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {/* Strengths */}
-        <div className="bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/20">
-          <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <i className="fa-solid fa-shield-halved"></i> نقاط القوة والتميز للجنة
-          </h4>
-          <ul className="space-y-2 text-xs text-slate-300">
-            <li className="flex items-start gap-2">
-              <i className="fa-solid fa-check text-emerald-400 mt-0.5"></i>
-              السرعة والمرونة العالية في التعامل مع التحديات المفاجئة.
-            </li>
-            <li className="flex items-start gap-2">
-              <i className="fa-solid fa-check text-emerald-400 mt-0.5"></i>
-              روح التعاون العالية وتغطية الأعضاء لمهام بعضهم عند الضغط.
-            </li>
-          </ul>
-        </div>
-
-        {/* Areas for Improvement */}
-        <div className="bg-gdg-red/5 rounded-xl p-4 border border-gdg-red/20">
-          <h4 className="text-xs font-bold text-gdg-red uppercase tracking-wider mb-3 flex items-center gap-2">
-            <i className="fa-solid fa-arrow-up-right-dots"></i> نقاط التحسين المطلوب العمل عليها
-          </h4>
-          <ul className="space-y-2 text-xs text-slate-300">
-            <li className="flex items-start gap-2">
-              <i className="fa-solid fa-circle-exclamation text-gdg-red mt-0.5"></i>
-              تحسين جدولة المهام لتجنب تكدس العمل في الساعات الأخيرة.
-            </li>
-            <li className="flex items-start gap-2">
-              <i className="fa-solid fa-circle-exclamation text-gdg-red mt-0.5"></i>
-              التوثيق المكتوب والتأكيد على استلام التاسك رسمياً.
-            </li>
-          </ul>
-        </div>
-      </div>
     </section>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { committeesData, MONTHS, defaultFormValues, getDefaultEvaluation, TECH_COMMITTEE_IDS } from '../data/committees';
+import { committeesData, CURRENT_MONTH, MONTHS, defaultFormValues, getDefaultEvaluation } from '../data/committees';
 import { api } from '../utils/api';
 import { computeAttendanceRate, computeScore, getScoreBadge } from '../utils/calculations';
 import { buildMarkdownReport } from '../utils/markdown';
@@ -16,22 +16,33 @@ import ChallengesSection from '../components/evaluation/ChallengesSection';
 import DeliverablesSection from '../components/evaluation/DeliverablesSection';
 import RecommendationsSection from '../components/evaluation/RecommendationsSection';
 import ProfileModal from '../components/ProfileModal';
+import Leaderboard from './Leaderboard';
 
 const NUMBER_WORDS = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { showToast } = useToast();
 
+  const assignedCommittee = committeesData.tech.some((committee) => committee.id === user?.committee)
+    ? { id: user.committee, type: 'tech' }
+    : committeesData.non_tech.some((committee) => committee.id === user?.committee)
+      ? { id: user.committee, type: 'non_tech' }
+      : null;
+  const startingCommitteeType = user?.role === 'supervisor' && assignedCommittee ? assignedCommittee.type : 'non_tech';
+  const startingCommitteeId = user?.role === 'supervisor' && assignedCommittee ? assignedCommittee.id : 'OC';
+
   const [isEditMode, setIsEditMode] = useState(false);
-  const [committeeType, setCommitteeType] = useState('non_tech');
-  const [committeeId, setCommitteeId] = useState('OC');
-  const [month, setMonth] = useState(MONTHS[0]);
+  const [activeView, setActiveView] = useState('report');
+  const [committeeType, setCommitteeType] = useState(startingCommitteeType);
+  const [committeeId, setCommitteeId] = useState(startingCommitteeId);
+  const [month, setMonth] = useState(CURRENT_MONTH);
+  const [monthOptions, setMonthOptions] = useState(MONTHS);
   const [profileOpen, setProfileOpen] = useState(false);
   const [evalLoading, setEvalLoading] = useState(false);
   const [evalId, setEvalId] = useState(null);
 
-  const [initialData] = useState(() => getDefaultEvaluation('OC', 'non_tech', user?.name));
+  const [initialData] = useState(() => getDefaultEvaluation(startingCommitteeId, startingCommitteeType, user?.name));
   const [form, setForm] = useState(initialData.form);
   const [meetings, setMeetings] = useState(initialData.meetings);
   const [tasks, setTasks] = useState(initialData.tasks);
@@ -48,6 +59,10 @@ export default function Dashboard() {
   // Mirrors the original loadEvaluation(): fetch the saved evaluation from the
   // API or reset to the base template. Never auto-creates a document.
   useEffect(() => {
+    if (!['head_hr', 'supervisor'].includes(userRef.current?.role)) {
+      setEvalLoading(false);
+      return undefined;
+    }
     const seq = ++loadSeq.current;
     const name = committeesData[committeeType].find((c) => c.id === committeeId)?.name || '';
     const defaults = getDefaultEvaluation(committeeId, committeeType, userRef.current?.name);
@@ -104,6 +119,17 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month, committeeId, committeeType]);
 
+  useEffect(() => {
+    if (!['head_hr', 'supervisor'].includes(user?.role)) return undefined;
+    let active = true;
+    api.get('/evaluations/months')
+      .then(({ months = [] }) => {
+        if (active) setMonthOptions([...new Set([...MONTHS, ...months])]);
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [user?.role]);
+
   // Mirrors the original checkAuthOnLoad() -> applyAuthenticatedUser():
   // set supervisor to the logged-in user and switch to their committee.
   // The committee switch is batched atomically; unknown committees (e.g. 'عام')
@@ -112,13 +138,9 @@ export default function Dashboard() {
     if (!user) return;
     setForm((prev) => ({ ...prev, supervisor: user.name }));
 
-    if (user.committee && user.committee !== 'HR') {
-      if (TECH_COMMITTEE_IDS.includes(user.committee)) {
-        setCommitteeType('tech');
-        setCommitteeId(user.committee);
-      } else if (committeesData.non_tech.some((c) => c.id === user.committee)) {
-        setCommitteeId(user.committee);
-      }
+    if (user.role === 'supervisor' && assignedCommittee) {
+      setCommitteeType(assignedCommittee.type);
+      setCommitteeId(assignedCommittee.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -173,6 +195,7 @@ export default function Dashboard() {
   };
 
   const handleTypeChange = async (newType) => {
+    if (user?.role === 'supervisor' && newType !== assignedCommittee?.type) return;
     if (isEditMode) {
       const saved = await saveCurrentEvaluation(true);
       if (!saved) return; // keep current state; do not switch
@@ -183,6 +206,7 @@ export default function Dashboard() {
   };
 
   const handleCommitteeChange = async (newCommitteeId) => {
+    if (user?.role === 'supervisor' && newCommitteeId !== user.committee) return;
     if (isEditMode) {
       const saved = await saveCurrentEvaluation(true);
       if (!saved) return;
@@ -196,6 +220,29 @@ export default function Dashboard() {
       if (!saved) return;
     }
     setMonth(newMonth);
+  };
+
+  const navigateToView = async (nextView) => {
+    if (nextView === activeView) return;
+    if (isEditMode) {
+      const saved = await saveCurrentEvaluation(true);
+      if (!saved) return;
+      setIsEditMode(false);
+    }
+    setActiveView(nextView);
+  };
+
+  const openCommitteeReport = async ({ committeeId: nextCommitteeId, committeeType: nextType, month: nextMonth }) => {
+    if (isEditMode) {
+      const saved = await saveCurrentEvaluation(true);
+      if (!saved) return;
+      setIsEditMode(false);
+    }
+    setCommitteeType(nextType);
+    setCommitteeId(nextCommitteeId);
+    setMonthOptions((current) => [...new Set([...current, nextMonth])]);
+    setMonth(nextMonth);
+    setActiveView('report');
   };
 
   const handleFormChange = (field, value) => {
@@ -213,16 +260,16 @@ export default function Dashboard() {
             instructor: 'اسم الانستراكتور',
             type: 'أونلاين (Google Meet)',
             duration: '2 ساعة',
-            attendance: 20,
-            absence: 2,
+            attendance: 0,
+            absence: 0,
             notes: 'ملاحظات وتفاعل الأعضاء في السيشن',
           }
         : {
             id: Date.now(),
             title: `الاجتماع ${indexStr}: اجتماع متابعة جديد`,
             duration: '1.5 ساعة',
-            attendance: 18,
-            absence: 2,
+            attendance: 0,
+            absence: 0,
             notes: 'ملاحظات وتوصيات الاجتماع',
           };
     setMeetings((prev) => [...prev, newMeeting]);
@@ -240,7 +287,7 @@ export default function Dashboard() {
 
   // ---------- Tasks ----------
   const addTask = (text, assigned) => {
-    setTasks((prev) => [...prev, { text, assigned, status: 'completed' }]);
+    setTasks((prev) => [...prev, { text, assigned, status: 'in_progress' }]);
     showToast('تم إدراج المهمة بنجاح!', 'info');
   };
 
@@ -258,7 +305,7 @@ export default function Dashboard() {
   const score = computeScore(attendanceRate, form.commScore, form.deadlineScore);
   const scoreBadge = getScoreBadge(score);
 
-  const handleCopyReport = () => {
+  const handleCopyReport = async () => {
     const markdownText = buildMarkdownReport({
       committeeName,
       month,
@@ -276,25 +323,62 @@ export default function Dashboard() {
       generalRecs: form.generalRecs,
     });
 
-    const textArea = document.createElement('textarea');
-    textArea.value = markdownText;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(markdownText);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = markdownText;
+        textArea.setAttribute('readonly', '');
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        const copied = document.execCommand('copy');
+        textArea.remove();
+        if (!copied) throw new Error('Clipboard unavailable');
+      }
+    } catch {
+      showToast('تعذر النسخ من المتصفح. جرّب الطباعة أو افتح التطبيق في نافذة آمنة.', 'error');
+      return;
+    }
 
     showToast('تم نسخ نص التقرير الكامل بفرمتة Markdown!', 'info');
   };
 
+  const canUseDashboard = user?.role === 'head_hr' || (user?.role === 'supervisor' && Boolean(assignedCommittee));
+  const committeeOptions = committeesData[committeeType].filter((committee) =>
+    user?.role !== 'supervisor' || committee.id === user.committee
+  );
+
+  if (!canUseDashboard) {
+    return (
+      <main className="access-pending" dir="rtl">
+        <section className="access-pending-card">
+          <span className="app-brand-mark" aria-hidden="true"><b>G</b><b>D</b><b>G</b></span>
+          <h1>حسابك لسه محتاج تفعيل</h1>
+          <p>تم إنشاء الحساب، لكن عرض تقارير اللجان متاح للمشرفين ومسؤولي الموارد البشرية فقط. تواصل مع مسؤول الفرع لتحديد صلاحية حسابك.</p>
+          <button type="button" className="app-button app-button-secondary" onClick={logout}>تسجيل الخروج</button>
+        </section>
+      </main>
+    );
+  }
+
   return (
-    <div>
+    <div className="app-shell" dir="rtl">
       <Header
         isEditMode={isEditMode}
         onToggleEdit={toggleEditMode}
         onCopyReport={handleCopyReport}
         onOpenProfile={() => setProfileOpen(true)}
+        view={activeView}
+        onNavigate={navigateToView}
+        canUseLeaderboard={canUseDashboard}
       />
 
+      {activeView === 'leaderboard' ? (
+        <Leaderboard onOpenReport={openCommitteeReport} />
+      ) : (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <PrintHeader />
 
@@ -302,6 +386,10 @@ export default function Dashboard() {
           committeeType={committeeType}
           committeeId={committeeId}
           month={month}
+          months={monthOptions}
+          committeeOptions={committeeOptions}
+          canSelectCommittees={user?.role === 'head_hr'}
+          supervisorEditable={user?.role === 'head_hr'}
           supervisor={form.supervisor}
           target={form.target}
           isEditMode={isEditMode}
@@ -318,6 +406,7 @@ export default function Dashboard() {
           attendanceRate={attendanceRate}
           meetingsCount={meetings.length}
           deadlineScore={form.deadlineScore}
+          deliverables={form.deliverables}
         />
 
         <div className="relative">
@@ -387,6 +476,7 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+      )}
 
       {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}
     </div>

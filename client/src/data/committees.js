@@ -11,10 +11,14 @@ export const committeesData = {
     { id: 'ML', name: 'تعلم الآلة (Machine Learning)' },
     { id: 'Flutter', name: 'تطوير التطبيقات (Flutter)' },
     { id: 'DataAnalysis', name: 'تحليل البيانات (Data Analysis)' },
+    { id: 'SoftwareEngineering', name: 'هندسة البرمجيات (Software Engineering)' },
+    { id: 'UIUX', name: 'تصميم واجهة وتجربة المستخدم (UI/UX)' },
+    { id: 'Frontend', name: 'تطوير واجهات الويب (Frontend)' },
+    { id: 'CyberSecurity', name: 'الأمن السيبراني (Cybersecurity)' },
   ],
 };
 
-export const TECH_COMMITTEE_IDS = ['ML', 'Flutter', 'DataAnalysis'];
+export const TECH_COMMITTEE_IDS = ['ML', 'Flutter', 'DataAnalysis', 'SoftwareEngineering', 'UIUX', 'Frontend', 'CyberSecurity'];
 
 // Empty task presets: new evaluations start without tasks
 export const committeeTasksPreset = {
@@ -25,6 +29,10 @@ export const committeeTasksPreset = {
   ML: [],
   Flutter: [],
   DataAnalysis: [],
+  SoftwareEngineering: [],
+  UIUX: [],
+  Frontend: [],
+  CyberSecurity: [],
 };
 
 export const fallbackTaskPreset = [];
@@ -34,21 +42,17 @@ export const defaultNonTechMeetings = [];
 export const defaultTechSessions = [];
 
 // Month options
-export const MONTHS = [
-  'أكتوبر 2026',
-  'نوفمبر 2026',
-  'ديسمبر 2026',
-  'يناير 2027',
-  'فبراير 2027',
-  'مارس 2027',
-  'أبريل 2027',
-  'مايو 2027',
-  'يونيو 2027',
-  'يوليو 2027',
-  'أغسطس 2027',
-  'سبتمبر 2027',
-  'أكتوبر 2027',
-];
+const ARABIC_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+export function formatMonth(date) {
+  return `${ARABIC_MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+const now = new Date();
+export const CURRENT_MONTH = formatMonth(now);
+export const MONTHS = Array.from({ length: 14 }, (_, index) =>
+  formatMonth(new Date(now.getFullYear(), now.getMonth() + index - 1, 1))
+);
 
 // Empty default template used when no saved evaluation exists
 export const defaultFormValues = {

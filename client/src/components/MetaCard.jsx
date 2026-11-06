@@ -16,6 +16,10 @@ export default function MetaCard({
   committeeType,
   committeeId,
   month,
+  months = MONTHS,
+  committeeOptions,
+  canSelectCommittees = true,
+  supervisorEditable = true,
   supervisor,
   target,
   isEditMode,
@@ -37,6 +41,7 @@ export default function MetaCard({
           <select
             id="meta-committee-type"
             value={committeeType}
+            disabled={!canSelectCommittees}
             onChange={(e) => onTypeChange(e.target.value)}
             className={selectClass}
           >
@@ -51,10 +56,11 @@ export default function MetaCard({
           <select
             id="meta-committee"
             value={committeeId}
+            disabled={!canSelectCommittees}
             onChange={(e) => onCommitteeChange(e.target.value)}
             className={committeeSelectClass}
           >
-            {committeesData[committeeType].map((item) => (
+            {(committeeOptions || committeesData[committeeType]).map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>
@@ -70,7 +76,7 @@ export default function MetaCard({
             onChange={(e) => onMonthChange(e.target.value)}
             className={committeeSelectClass}
           >
-            {MONTHS.map((m) => (
+            {months.map((m) => (
               <option key={m} value={m}>
                 {m}
               </option>
@@ -84,7 +90,7 @@ export default function MetaCard({
             type="text"
             id="meta-supervisor"
             value={supervisor}
-            readOnly={!isEditMode}
+            readOnly={!isEditMode || !supervisorEditable}
             onChange={(e) => onSupervisorChange(e.target.value)}
             className={supervisorTargetClass}
           />

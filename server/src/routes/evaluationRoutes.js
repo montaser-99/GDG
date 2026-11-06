@@ -3,17 +3,19 @@ import {
   createEvaluation,
   deleteEvaluation,
   getEvaluation,
+  getEvaluationMonths,
   getEvaluations,
   updateEvaluation,
 } from '../controllers/evaluationController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { authorize, protect } from '../middleware/authMiddleware.js';
 
 const router = Router();
 
-// All evaluation routes require authentication once Phase 3 wires the client.
-router.use(protect);
+router.use(protect, authorize('head_hr', 'supervisor'));
 
 router.route('/').get(getEvaluations).post(createEvaluation);
-router.route('/:id').get(getEvaluation).put(updateEvaluation).delete(deleteEvaluation);
+router.get('/months', getEvaluationMonths);
+router.route('/:id').get(getEvaluation).put(updateEvaluation);
+router.delete('/:id', authorize('head_hr'), deleteEvaluation);
 
 export default router;

@@ -74,19 +74,6 @@ export default function RecommendationsSection({ warnings, filteration, bestMemb
         </div>
       </div>
 
-      {/* Supervisor Approval Stamp */}
-      <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
-        <div>
-          <p className="text-xs text-slate-400">اعتماد وتوقيع المعتمد</p>
-          <p className="text-sm font-bold text-slate-200 mt-1" id="signature-name">
-            Dyaa Abdullah (Head HR)
-          </p>
-          <p className="text-xs text-slate-400 mt-0.5">GDG On Campus Damanhour</p>
-        </div>
-        <div className="w-12 h-12 rounded-full border-2 border-dashed border-gdg-blue/60 flex items-center justify-center text-gdg-blue">
-          <i className="fa-solid fa-stamp text-lg"></i>
-        </div>
-      </div>
     </section>
   );
 }

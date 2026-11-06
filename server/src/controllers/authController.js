@@ -4,13 +4,13 @@ import { COOKIE_NAME, cookieOptions } from '../middleware/authMiddleware.js';
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
-function setAuthCookie(res, userId, remember = true) {
+function setAuthCookie(res, userId, remember = true, tokenVersion = 0) {
   const options = cookieOptions();
   if (!remember) {
     // Session cookie: cleared when the browser closes.
     delete options.maxAge;
   }
-  res.cookie(COOKIE_NAME, generateToken(userId), options);
+  res.cookie(COOKIE_NAME, generateToken(userId, tokenVersion), options);
 }
 
 // POST /api/auth/register
@@ -47,7 +47,7 @@ export async function register(req, res, next) {
       committee: 'عام',
     });
 
-    setAuthCookie(res, user._id);
+    setAuthCookie(res, user._id, true, user.tokenVersion);
 
     res.status(201).json({ user });
   } catch (error) {
@@ -64,12 +64,12 @@ export async function login(req, res, next) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email: String(email).trim().toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: String(email).trim().toLowerCase() }).select('+password +tokenVersion');
     if (!user || !(await user.matchPassword(String(password)))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    setAuthCookie(res, user._id, remember !== false);
+    setAuthCookie(res, user._id, remember !== false, user.tokenVersion);
 
     res.status(200).json({ user: user.toJSON() });
   } catch (error) {
@@ -78,7 +78,13 @@ export async function login(req, res, next) {
 }
 
 // POST /api/auth/logout
-export async function logout(req, res) {
+export async function logout(req, res, next) {
+  try {
+    req.user.tokenVersion = Number(req.user.tokenVersion || 0) + 1;
+    await req.user.save();
+  } catch (error) {
+    return next(error);
+  }
   res.clearCookie(COOKIE_NAME, { ...cookieOptions(), maxAge: undefined });
   res.status(200).json({ message: 'Logged out' });
 }

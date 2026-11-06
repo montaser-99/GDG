@@ -27,9 +27,12 @@ export async function protect(req, res, next) {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
 
-    const user = await User.findById(payload.id);
+    const user = await User.findById(payload.id).select('+tokenVersion');
     if (!user) {
       return res.status(401).json({ message: 'User no longer exists' });
+    }
+    if (Number(payload.tokenVersion || 0) !== Number(user.tokenVersion || 0)) {
+      return res.status(401).json({ message: 'Session has been revoked' });
     }
 
     req.user = user;

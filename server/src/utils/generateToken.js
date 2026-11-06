@@ -1,11 +1,11 @@
 import jwt from 'jsonwebtoken';
 
-export default function generateToken(userId) {
+export default function generateToken(userId, tokenVersion = 0) {
   if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is not defined. Set it in server/.env (see .env.example).');
   }
 
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+  return jwt.sign({ id: userId, tokenVersion }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 }
