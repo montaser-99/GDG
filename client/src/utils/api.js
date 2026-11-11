@@ -1,6 +1,12 @@
 // Minimal fetch wrapper for the Express API.
 // Auth uses an httpOnly cookie, so every request must send credentials.
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api';
+const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '');
+if (!apiUrl) {
+  throw new Error('VITE_API_URL must be set for a production build.');
+}
+
+const configuredApiUrl = apiUrl.replace(/\/+$/, '');
+const API_BASE = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
 
 async function request(path, { method = 'GET', body } = {}) {
   let res;

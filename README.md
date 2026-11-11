@@ -105,7 +105,8 @@ Configure these variables in `server/.env`:
 | `MONGO_URI` | Yes | MongoDB connection string. For local MongoDB, a development value can be `mongodb://127.0.0.1:27017/gdg_damanhour`. |
 | `JWT_SECRET` | Yes | Unique random secret used to sign JWTs. Do not reuse a repository example or publish this value. |
 | `PORT` | No | API port; defaults to `5000`. |
-| `CLIENT_URL` | No | Exact browser origin allowed by CORS; defaults to `http://localhost:5173`. |
+| `CLIENT_URL` | Production browser access | Exact frontend origin allowed by CORS. In development, `http://localhost:5173` is allowed automatically. |
+| `CLIENT_URLS` | No | Optional comma-separated list of additional exact frontend origins; do not use `*`. |
 | `JWT_EXPIRES_IN` | No | JWT lifetime; defaults to `7d`. Use a value accepted by `jsonwebtoken`, such as `7d`. |
 | `SEED_ADMIN_EMAIL` | Required by seed | Email for the initial Head of HR account. |
 | `SEED_ADMIN_PASSWORD` | Required by seed | Password for the initial Head of HR account; the model requires at least 6 characters. |
@@ -118,7 +119,7 @@ Generate a local JWT secret with Node.js:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-The optional frontend variable `VITE_API_URL` is the API origin only (for example, `http://localhost:5000`); the client appends `/api`. If it is omitted, the client uses `http://localhost:5000`.
+The frontend variable `VITE_API_URL` is the API origin (for example, `http://localhost:5000`); the client appends `/api` if needed. Local development defaults to `http://localhost:5000`; production builds require `VITE_API_URL` so they cannot silently point to localhost.
 
 ## MongoDB setup
 
