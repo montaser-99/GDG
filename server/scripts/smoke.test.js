@@ -6,6 +6,7 @@ process.env.CLIENT_URL = 'http://localhost:5173';
 
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { execFile } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -40,6 +41,11 @@ async function run() {
     const { default: User } = await import('../src/models/User.js');
     const { default: Evaluation } = await import('../src/models/Evaluation.js');
     const { computeEvaluationScore, computeAttendanceRate, computeOverallScore } = await import('../src/utils/score.js');
+
+    const printableHeader = await readFile(path.resolve(serverRoot, '../client/src/components/PrintHeader.jsx'), 'utf8');
+    const reportMeta = await readFile(path.resolve(serverRoot, '../client/src/components/MetaCard.jsx'), 'utf8');
+    check('print report labels the authenticated creator separately from fixed HR Leaderboard recipient',
+      printableHeader.includes('Report Recipient: HR Leaderboard') && reportMeta.includes('Report Creator') && reportMeta.includes("recipient = 'HR Leaderboard'") && reportMeta.includes('value={supervisor}'));
 
     await connectDB();
     server = app.listen(0);
@@ -195,6 +201,7 @@ async function run() {
     });
     const created = await json(createdResponse);
     check('head HR can create a persisted evaluation', createdResponse.status === 201 && Boolean(created.evaluation?._id));
+    check('Admin report creator is derived from the authenticated database user', created.evaluation?.supervisor === 'HR Admin');
     const evaluationId = created.evaluation?._id;
     const persistedEvaluation = await Evaluation.findById(evaluationId).lean();
     check('created evaluation exists in MongoDB with nested tasks', persistedEvaluation?.tasks?.[0]?.assignee === 'OC team' && persistedEvaluation?.tasks?.[0]?.status === 'completed');
@@ -219,9 +226,17 @@ async function run() {
 
     const supervisorCreate = await fetch(`${base}/api/evaluations`, {
       method: 'POST', headers: { ...authHeaders(supervisorCookie), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...evaluationBody, committeeId: 'OC', committeeType: 'non_tech' }),
+      body: JSON.stringify({ ...evaluationBody, month: 'December 2026', committeeId: 'OC', committeeType: 'non_tech' }),
     });
-    check('supervisor cannot create a report for their own committee', supervisorCreate.status === 403);
+    check('supervisor can create a report for their own committee', supervisorCreate.status === 201);
+    const supervisorCreated = await json(supervisorCreate);
+    check('report creator comes from the authenticated user, not the client', supervisorCreated.evaluation?.supervisor === 'OC Supervisor');
+    const spoofedCreator = await fetch(`${base}/api/evaluations/${supervisorCreated.evaluation?._id}`, {
+      method: 'PUT', headers: { ...authHeaders(supervisorCookie), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', supervisor: 'Forged creator', commScore: 77 }),
+    });
+    const spoofedCreatorBody = await json(spoofedCreator);
+    check('supervisor can edit their own report while creator and committee stay immutable', spoofedCreator.status === 200 && spoofedCreatorBody.evaluation?.supervisor === 'OC Supervisor' && spoofedCreatorBody.evaluation?.committeeId === 'OC');
     const viewerUpdate = await fetch(`${base}/api/evaluations/${evaluationId}`, { method: 'PUT', headers: { ...authHeaders(viewerCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ ...evaluationBody, commScore: 88 }) });
     check('leaderboard viewer cannot update a report', viewerUpdate.status === 403);
     const viewerDelete = await fetch(`${base}/api/evaluations/${evaluationId}`, { method: 'DELETE', headers: authHeaders(viewerCookie) });
@@ -242,7 +257,12 @@ async function run() {
       method: 'PUT', headers: { ...authHeaders(supervisorCookie), 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', month: 'December 2026', commScore: 88 }),
     });
-    check('supervisor cannot update their own committee report', supervisorUpdate.status === 403);
+    check('supervisor can edit their assigned committee report', supervisorUpdate.status === 200);
+    const crossCommitteeUpdate = await fetch(`${base}/api/evaluations/${evaluationId}`, {
+      method: 'PUT', headers: { ...authHeaders(otherSupervisorCookie), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', commScore: 88 }),
+    });
+    check('cross-committee supervisor update is rejected with 403', crossCommitteeUpdate.status === 403);
     const updateResponse = await fetch(`${base}/api/evaluations/${evaluationId}`, {
       method: 'PUT', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', month: 'December 2026', commScore: 88 }),
@@ -250,6 +270,20 @@ async function run() {
     const updated = await json(updateResponse);
     check('head HR can update a report', updateResponse.status === 200 && updated.evaluation?.commScore === 88);
     check('report identity cannot be changed by update', updated.evaluation?.committeeId === 'OC' && updated.evaluation?.month === month);
+
+    const historicalEvaluation = await Evaluation.create({
+      ...evaluationBody,
+      committeeId: 'Flutter',
+      committeeType: 'tech',
+      month: 'October 2026',
+      supervisor: 'Historical Creator',
+    });
+    const historicalUpdate = await fetch(`${base}/api/evaluations/${historicalEvaluation._id}`, {
+      method: 'PUT', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...evaluationBody, supervisor: 'Replacement Name', commScore: 86 }),
+    });
+    const historicalUpdated = await json(historicalUpdate);
+    check('updating historical report preserves its stored creator name', historicalUpdate.status === 200 && historicalUpdated.evaluation?.supervisor === 'Historical Creator');
 
     const adminRelogin = await fetch(`${base}/api/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },

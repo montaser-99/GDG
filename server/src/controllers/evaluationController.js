@@ -142,8 +142,11 @@ export async function createEvaluation(req, res, next) {
       if (!COMMITTEE_BY_ID.has(req.user.committee) || data.committeeId !== req.user.committee) {
         return res.status(403).json({ message: 'You can only create evaluations for your assigned committee' });
       }
-      data.supervisor = req.user.name;
     }
+
+    // The authenticated database user is the source of creator identity.
+    // Keep the existing field for compatibility with historical reports.
+    data.supervisor = req.user.name;
 
     const evaluation = await Evaluation.create(data);
     res.status(201).json({ evaluation });
@@ -165,6 +168,8 @@ export async function updateEvaluation(req, res, next) {
     }
 
     const data = sanitizeEvaluation(req.body);
+    // Creator is immutable on update; this preserves historical creator names.
+    data.supervisor = evaluation.supervisor;
     data.committeeId = evaluation.committeeId;
     data.month = evaluation.month;
     data.committeeType = evaluation.committeeType;
@@ -181,6 +186,9 @@ export async function updateEvaluation(req, res, next) {
 // DELETE /api/evaluations/:id
 export async function deleteEvaluation(req, res, next) {
   try {
+    if (req.user?.role === 'supervisor') {
+      return res.status(403).json({ message: 'Supervisors cannot delete evaluations' });
+    }
     const evaluation = await Evaluation.findByIdAndDelete(req.params.id);
     if (!evaluation) {
       return res.status(404).json({ message: 'Evaluation not found' });
@@ -211,6 +219,9 @@ export async function getEvaluationMonths(req, res, next) {
 // GET /api/leaderboard?month=...&type=tech|non_tech
 export async function getLeaderboard(req, res, next) {
   try {
+    if (!['head_hr', 'leaderboard_viewer'].includes(req.user?.role)) {
+      return res.status(403).json({ message: 'Forbidden: ranking access is restricted' });
+    }
     const month = typeof req.query.month === 'string' ? req.query.month.trim() : '';
     if (!month) return res.status(400).json({ message: 'Month is required' });
     if (month.length > 40) return res.status(400).json({ message: 'Month is too long' });

@@ -21,6 +21,7 @@ export default function MetaCard({
   canSelectCommittees = true,
   supervisorEditable = true,
   supervisor,
+  recipient = 'HR Leaderboard',
   target,
   isEditMode,
   onTypeChange,
@@ -34,7 +35,7 @@ export default function MetaCard({
     <div className="glass-card print-card rounded-2xl p-6 mb-8 relative overflow-hidden">
       <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-gdg-blue via-gdg-red via-gdg-yellow to-gdg-green"></div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {/* Committee Category */}
         <div>
           <label className="block text-xs font-semibold text-slate-400 mb-1">تصنيف اللجنة</label>
@@ -85,15 +86,19 @@ export default function MetaCard({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">مُعدّ التقرير (Supervisor)</label>
+          <label className="block text-xs font-semibold text-slate-400 mb-1">Report Creator (مُعدّ التقرير)</label>
           <input
             type="text"
             id="meta-supervisor"
             value={supervisor}
-            readOnly={!isEditMode || !supervisorEditable}
-            onChange={(e) => onSupervisorChange(e.target.value)}
+            readOnly
             className={supervisorTargetClass}
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 mb-1">Report Recipient</label>
+          <input type="text" id="meta-recipient" value={recipient} readOnly className={supervisorTargetClass} />
         </div>
 
         <div>

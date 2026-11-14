@@ -1,7 +1,7 @@
 export default function PrintHeader() {
   return (
     /* Printable Header with Logo (Visible only on print/PDF) */
-    <div className="hidden print:block mb-6 border-b-2 border-slate-300 pb-4">
+    <div className="hidden print:block mb-6 border-b-2 border-slate-300 pb-4" dir="rtl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center text-3xl font-black gap-1 tracking-wider">
@@ -19,6 +19,7 @@ export default function PrintHeader() {
         <div className="text-left text-xs text-slate-600 font-bold">
           <p>Google Developer Groups On Campus</p>
           <p>Damanhour University</p>
+          <p>Report Recipient: HR Leaderboard</p>
         </div>
       </div>
     </div>
