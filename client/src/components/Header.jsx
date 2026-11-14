@@ -9,6 +9,8 @@ export default function Header({
   view,
   onNavigate,
   canUseLeaderboard,
+  canManageUsers,
+  canEditReports,
 }) {
   const { user, logout } = useAuth();
 
@@ -46,10 +48,21 @@ export default function Header({
               <span>ترتيب اللجان</span>
             </button>
           )}
+          {canManageUsers && (
+            <button
+              type="button"
+              className={`app-nav-button ${view === 'admin' ? 'is-active' : ''}`}
+              aria-current={view === 'admin' ? 'page' : undefined}
+              onClick={() => onNavigate('admin')}
+            >
+              <i className="fa-solid fa-users-gear" aria-hidden="true" />
+              <span>إدارة الحسابات</span>
+            </button>
+          )}
         </nav>
 
         <div className="app-header-actions">
-          {view === 'report' && (
+          {view === 'report' && canEditReports && (
             <>
               <button type="button" className="app-button app-button-secondary" onClick={onToggleEdit}>
                 <i className={`fa-solid ${isEditMode ? 'fa-floppy-disk' : 'fa-pen-to-square'}`} aria-hidden="true" />

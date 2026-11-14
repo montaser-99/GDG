@@ -51,61 +51,43 @@ async function run() {
     const health = await json(await fetch(`${base}/api/health`));
     check('health endpoint responds', health.status === 'ok');
 
-    const badRegister = await fetch(`${base}/api/auth/register`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'invalid', password: '123', confirmPassword: '456' }),
-    });
-    check('registration validates required fields', badRegister.status === 400);
-
     const registerResponse = await fetch(`${base}/api/auth/register`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Test Member', email: 'Member@Test.com', password: 'secret1', confirmPassword: 'secret1', role: 'head_hr', committee: 'OC' }),
+      body: JSON.stringify({ name: 'Attempted Admin', email: 'attempt@test.com', password: 'secret1', confirmPassword: 'secret1', role: 'head_hr' }),
     });
-    const registered = await json(registerResponse);
-    check('public registration creates a member', registerResponse.status === 201 && registered.user?.role === 'member');
-    check('registration ignores client role and committee', registered.user?.committee === 'عام');
-    check('registration never returns a password', !('password' in (registered.user || {})));
-    check('registration uses an HttpOnly cookie', /HttpOnly/i.test(registerResponse.headers.get('set-cookie') || ''));
+    check('public registration is disabled even when a privileged role is requested', registerResponse.status === 403);
 
-    const duplicateRegistration = await fetch(`${base}/api/auth/register`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Duplicate Member', email: 'member@test.com', password: 'secret1', confirmPassword: 'secret1' }),
-    });
-    check('duplicate registration is rejected', duplicateRegistration.status === 409);
-
+    await User.create({ name: 'Test Member', email: 'member@test.com', password: 'MemberPass123!', role: 'member' });
     const badLogin = await fetch(`${base}/api/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'member@test.com', password: 'wrong-password' }),
     });
     check('incorrect password is rejected', badLogin.status === 401);
-
     const noAuth = await fetch(`${base}/api/auth/me`);
     check('session endpoint rejects unauthenticated requests', noAuth.status === 401);
 
     const memberLogin = await fetch(`${base}/api/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'member@test.com', password: 'secret1' }),
+      body: JSON.stringify({ email: 'member@test.com', password: 'MemberPass123!' }),
     });
     const memberCookie = (memberLogin.headers.get('set-cookie') || '').split(';')[0];
-    check('member can log in', memberLogin.status === 200 && Boolean(memberCookie));
-
+    check('member can authenticate but remains a non-report account', memberLogin.status === 200 && Boolean(memberCookie));
     const memberMeResponse = await fetch(`${base}/api/auth/me`, { headers: authHeaders(memberCookie) });
     const memberMe = await json(memberMeResponse);
-    check('authenticated profile endpoint returns persisted account without password', memberMeResponse.status === 200 && memberMe.user?.email === 'member@test.com' && !('password' in (memberMe.user || {})));
-
+    check('authenticated profile endpoint never returns a password', memberMeResponse.status === 200 && memberMe.user?.email === 'member@test.com' && !('password' in (memberMe.user || {})));
     const rawMember = await User.findOne({ email: 'member@test.com' }).select('+password').lean();
     check('password is stored hashed', rawMember?.password?.startsWith('$2') === true);
+    const legacyAccount = await User.create({ name: 'Legacy User', email: 'legacy@test.com', password: 'LegacyPass123!', role: 'member' });
+    await User.collection.updateOne({ _id: legacyAccount._id }, { $unset: { isActive: '', mustChangePassword: '' } });
+    const legacyLogin = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'legacy@test.com', password: 'LegacyPass123!' }) });
+    check('existing accounts without status fields remain active without migration', legacyLogin.status === 200);
 
     const jsonwebtoken = (await import('jsonwebtoken')).default;
     const expiredToken = jsonwebtoken.sign({ id: String(rawMember._id) }, process.env.JWT_SECRET, { expiresIn: -1 });
     const expiredSession = await fetch(`${base}/api/auth/me`, { headers: authHeaders(`gdg_token=${expiredToken}`) });
     check('expired JWT is rejected', expiredSession.status === 401);
 
-
-    await User.create({ name: 'HR Admin', email: 'hr@test.com', password: 'AdminPass1!', role: 'head_hr', committee: 'HR' });
-    await User.create({ name: 'OC Supervisor', email: 'supervisor@test.com', password: 'Supervisor1!', role: 'supervisor', committee: 'OC' });
-    await User.create({ name: 'Flutter Supervisor', email: 'flutter@test.com', password: 'FlutterPass1!', role: 'supervisor', committee: 'Flutter' });
-
+    await User.create({ name: 'HR Admin', email: 'hr@test.com', password: 'AdminPass1!', role: 'head_hr', isActive: true });
     const loginCookie = async (email, password) => {
       const response = await fetch(`${base}/api/auth/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -114,13 +96,61 @@ async function run() {
       return (response.headers.get('set-cookie') || '').split(';')[0];
     };
     const adminCookie = await loginCookie('hr@test.com', 'AdminPass1!');
-    const supervisorCookie = await loginCookie('supervisor@test.com', 'Supervisor1!');
-    const otherSupervisorCookie = await loginCookie('flutter@test.com', 'FlutterPass1!');
+    const adminUsers = await fetch(`${base}/api/admin/users`, { headers: authHeaders(adminCookie) });
+    const adminUsersBody = await json(adminUsers);
+    check('head HR can access live user administration', adminUsers.status === 200 && adminUsersBody.stats?.totalUsers === 3 && adminUsersBody.pagination?.total === 3);
+    const filteredUsers = await json(await fetch(`${base}/api/admin/users?search=supervisor&role=supervisor&limit=1`, { headers: authHeaders(adminCookie) }));
+    check('user administration supports search, role filters, and pagination', filteredUsers.pagination?.limit === 1 && filteredUsers.pagination?.total === 0);
+    check('member cannot access user administration', (await fetch(`${base}/api/admin/users`, { headers: authHeaders(memberCookie) })).status === 403);
 
+    const createAccount = async (name, email, role, committee, isActive = true) => {
+      const response = await fetch(`${base}/api/admin/users`, {
+        method: 'POST', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, role, committee, password: 'TemporaryPass123!', isActive }),
+      });
+      return { response, body: await json(response) };
+    };
+    const createdViewer = await createAccount('Board Viewer', 'viewer@test.com', 'leaderboard_viewer');
+    check('admin creates read-only viewer without returning a password', createdViewer.response.status === 201 && createdViewer.body.user?.mustChangePassword === true && !('password' in createdViewer.body.user));
+    const invalidSupervisor = await createAccount('Invalid Supervisor', 'invalid-supervisor@test.com', 'supervisor');
+    check('supervisor creation requires a valid committee', invalidSupervisor.response.status === 400);
+    const createdSupervisor = await createAccount('OC Supervisor', 'supervisor@test.com', 'supervisor', 'OC');
+    const createdOtherSupervisor = await createAccount('Flutter Supervisor', 'flutter@test.com', 'supervisor', 'Flutter');
+    check('admin assigns valid committee IDs to supervisors', createdSupervisor.response.status === 201 && createdSupervisor.body.user?.committee === 'OC' && createdOtherSupervisor.response.status === 201 && createdOtherSupervisor.body.user?.committee === 'Flutter');
+    const invalidCommittee = await createAccount('Invalid Committee', 'invalid-committee@test.com', 'supervisor', 'Unknown');
+    check('invalid supervisor committee is rejected', invalidCommittee.response.status === 400);
+    const invalidRole = await createAccount('Invalid Role', 'invalid-role@test.com', 'super_admin');
+    check('unsupported roles are rejected by the admin API', invalidRole.response.status === 400);
+    const legacyRoleCreate = await createAccount('New Member', 'new-member@test.com', 'member');
+    check('Admin account creation uses only the three supported management roles', legacyRoleCreate.response.status === 400);
+
+    const viewerTempCookie = await loginCookie('viewer@test.com', 'TemporaryPass123!');
+    check('temporary-password account is blocked from reports', (await fetch(`${base}/api/evaluations`, { headers: authHeaders(viewerTempCookie) })).status === 403);
+    const passwordChangeResponse = await fetch(`${base}/api/auth/password`, {
+      method: 'POST', headers: { ...authHeaders(viewerTempCookie), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: 'TemporaryPass123!', newPassword: 'ViewerUpdatedPass123!' }),
+    });
+    check('password change invalidates the temporary session', passwordChangeResponse.status === 200 && (await fetch(`${base}/api/auth/me`, { headers: authHeaders(viewerTempCookie) })).status === 401);
+    let viewerCookie = await loginCookie('viewer@test.com', 'ViewerUpdatedPass123!');
+    const inactiveUpdate = await fetch(`${base}/api/admin/users/${createdViewer.body.user._id}`, { method: 'PATCH', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: false }) });
+    check('admin can deactivate an account', inactiveUpdate.status === 200 && (await json(inactiveUpdate)).user?.isActive === false);
+    check('deactivation rejects existing sessions and new login', (await fetch(`${base}/api/auth/me`, { headers: authHeaders(viewerCookie) })).status === 403 && (await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'viewer@test.com', password: 'ViewerUpdatedPass123!' }) })).status === 403);
+    const reactivated = await fetch(`${base}/api/admin/users/${createdViewer.body.user._id}`, { method: 'PATCH', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: true }) });
+    check('admin can reactivate an account and old sessions remain revoked', reactivated.status === 200 && (await fetch(`${base}/api/auth/me`, { headers: authHeaders(viewerCookie) })).status === 401);
+    viewerCookie = await loginCookie('viewer@test.com', 'ViewerUpdatedPass123!');
+
+    const supervisorTempCookie = await loginCookie('supervisor@test.com', 'TemporaryPass123!');
+    await fetch(`${base}/api/auth/password`, { method: 'POST', headers: { ...authHeaders(supervisorTempCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: 'TemporaryPass123!', newPassword: 'SupervisorUpdatedPass123!' }) });
+    const supervisorCookie = await loginCookie('supervisor@test.com', 'SupervisorUpdatedPass123!');
+    const otherSupervisorTempCookie = await loginCookie('flutter@test.com', 'TemporaryPass123!');
+    await fetch(`${base}/api/auth/password`, { method: 'POST', headers: { ...authHeaders(otherSupervisorTempCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: 'TemporaryPass123!', newPassword: 'FlutterUpdatedPass123!' }) });
+    const otherSupervisorCookie = await loginCookie('flutter@test.com', 'FlutterUpdatedPass123!');
     console.log('\nAuthorization and evaluation workflows');
     check('member role cannot read evaluations', (await fetch(`${base}/api/evaluations`, { headers: authHeaders(memberCookie) })).status === 403);
     check('member role cannot read leaderboard', (await fetch(`${base}/api/leaderboard?month=November%202026`, { headers: authHeaders(memberCookie) })).status === 403);
     check('unauthenticated user cannot read evaluations', (await fetch(`${base}/api/evaluations`)).status === 401);
+    check('supervisor cannot access the global leaderboard', (await fetch(`${base}/api/leaderboard?month=November%202026`, { headers: authHeaders(supervisorCookie) })).status === 403);
+    check('admin cannot change their own role or deactivate themselves', (await fetch(`${base}/api/admin/users/${(await User.findOne({ email: 'hr@test.com' }))._id}`, { method: 'PATCH', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'supervisor', committee: 'OC' }) })).status === 400);
 
     const logoutResponse = await fetch(`${base}/api/auth/logout`, {
       method: 'POST', headers: authHeaders(memberCookie),
@@ -169,6 +199,10 @@ async function run() {
     const persistedEvaluation = await Evaluation.findById(evaluationId).lean();
     check('created evaluation exists in MongoDB with nested tasks', persistedEvaluation?.tasks?.[0]?.assignee === 'OC team' && persistedEvaluation?.tasks?.[0]?.status === 'completed');
     check('negative attendance counts are normalized and client timestamps are ignored', persistedEvaluation?.meetings?.[1]?.attendance === 0 && persistedEvaluation?.meetings?.[1]?.absence === 0 && persistedEvaluation?.savedAt?.getFullYear() > 2020);
+    const viewerReadAll = await fetch(`${base}/api/evaluations?month=${encodeURIComponent(month)}`, { headers: authHeaders(viewerCookie) });
+    check('leaderboard viewer can read reports across committees', viewerReadAll.status === 200 && (await json(viewerReadAll)).evaluations?.length === 1);
+    const viewerBoard = await fetch(`${base}/api/leaderboard?month=${encodeURIComponent(month)}`, { headers: authHeaders(viewerCookie) });
+    check('leaderboard viewer can read the global leaderboard', viewerBoard.status === 200 && (await json(viewerBoard)).rankings?.length === 1);
 
     const duplicateResponse = await fetch(`${base}/api/evaluations`, {
       method: 'POST', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' },
@@ -183,23 +217,39 @@ async function run() {
     const foreignRead = await fetch(`${base}/api/evaluations?committeeId=Flutter&month=${encodeURIComponent(month)}`, { headers: authHeaders(supervisorCookie) });
     check('supervisor cannot query a different committee', foreignRead.status === 403);
 
-    const foreignCreate = await fetch(`${base}/api/evaluations`, {
+    const supervisorCreate = await fetch(`${base}/api/evaluations`, {
       method: 'POST', headers: { ...authHeaders(supervisorCookie), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', committeeType: 'tech' }),
+      body: JSON.stringify({ ...evaluationBody, committeeId: 'OC', committeeType: 'non_tech' }),
     });
-    check('supervisor cannot create for a different committee', foreignCreate.status === 403);
+    check('supervisor cannot create a report for their own committee', supervisorCreate.status === 403);
+    const viewerUpdate = await fetch(`${base}/api/evaluations/${evaluationId}`, { method: 'PUT', headers: { ...authHeaders(viewerCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ ...evaluationBody, commScore: 88 }) });
+    check('leaderboard viewer cannot update a report', viewerUpdate.status === 403);
+    const viewerDelete = await fetch(`${base}/api/evaluations/${evaluationId}`, { method: 'DELETE', headers: authHeaders(viewerCookie) });
+    check('leaderboard viewer cannot delete a report', viewerDelete.status === 403);
+    const resetResponse = await fetch(`${base}/api/admin/users/${createdViewer.body.user._id}/reset-password`, { method: 'POST', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ password: 'ResetTempPass123!' }) });
+    const resetResult = await json(resetResponse);
+    check('admin can reset a password without the API returning it', resetResponse.status === 200 && !JSON.stringify(resetResult).includes('ResetTempPass123!'));
+    check('password reset rejects the previous password', (await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'viewer@test.com', password: 'ViewerUpdatedPass123!' }) })).status === 401);
+    const resetTempCookie = await loginCookie('viewer@test.com', 'ResetTempPass123!');
+    check('reset password requires replacement before report access', (await fetch(`${base}/api/evaluations`, { headers: authHeaders(resetTempCookie) })).status === 403);
+    const completeReset = await fetch(`${base}/api/auth/password`, { method: 'POST', headers: { ...authHeaders(resetTempCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: 'ResetTempPass123!', newPassword: 'ViewerAfterResetPass123!' }) });
+    check('user can complete the administrator password reset', completeReset.status === 200);
 
     const foreignDetail = await fetch(`${base}/api/evaluations/${evaluationId}`, { headers: authHeaders(otherSupervisorCookie) });
     check('supervisor cannot read another committee by record ID', foreignDetail.status === 403);
 
-    const updateResponse = await fetch(`${base}/api/evaluations/${evaluationId}`, {
+    const supervisorUpdate = await fetch(`${base}/api/evaluations/${evaluationId}`, {
       method: 'PUT', headers: { ...authHeaders(supervisorCookie), 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', month: 'December 2026', commScore: 88 }),
     });
+    check('supervisor cannot update their own committee report', supervisorUpdate.status === 403);
+    const updateResponse = await fetch(`${base}/api/evaluations/${evaluationId}`, {
+      method: 'PUT', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', month: 'December 2026', commScore: 88 }),
+    });
     const updated = await json(updateResponse);
-    check('supervisor can update their report', updateResponse.status === 200 && updated.evaluation?.commScore === 88);
+    check('head HR can update a report', updateResponse.status === 200 && updated.evaluation?.commScore === 88);
     check('report identity cannot be changed by update', updated.evaluation?.committeeId === 'OC' && updated.evaluation?.month === month);
-    check('supervisor identity is taken from the session', updated.evaluation?.supervisor === 'OC Supervisor');
 
     const adminRelogin = await fetch(`${base}/api/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -222,10 +272,6 @@ async function run() {
     check('leaderboard type filter excludes nonmatching saved reports', typedBoard.rankings?.length === 0 && typedBoard.type === 'tech');
     check('leaderboard rejects unsupported type filters', (await fetch(`${base}/api/leaderboard?month=${encodeURIComponent(month)}&type=invalid`, { headers: authHeaders(adminCookie) })).status === 400);
     check('leaderboard requires a month', (await fetch(`${base}/api/leaderboard`, { headers: authHeaders(adminCookie) })).status === 400);
-
-    const supervisorBoardResponse = await fetch(`${base}/api/leaderboard?month=${encodeURIComponent(month)}`, { headers: authHeaders(supervisorCookie) });
-    const supervisorBoard = await json(supervisorBoardResponse);
-    check('supervisor leaderboard is limited to their committee', supervisorBoardResponse.status === 200 && supervisorBoard.rankings?.every((item) => item.committeeId === 'OC'));
 
     const monthsResponse = await fetch(`${base}/api/evaluations/months`, { headers: authHeaders(adminCookie) });
     const months = await json(monthsResponse);

@@ -2,8 +2,6 @@ import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 import { COOKIE_NAME, cookieOptions } from '../middleware/authMiddleware.js';
 
-const EMAIL_RE = /^\S+@\S+\.\S+$/;
-
 function setAuthCookie(res, userId, remember = true, tokenVersion = 0) {
   const options = cookieOptions();
   if (!remember) {
@@ -15,44 +13,7 @@ function setAuthCookie(res, userId, remember = true, tokenVersion = 0) {
 
 // POST /api/auth/register
 export async function register(req, res, next) {
-  try {
-    const { name, email, password, confirmPassword } = req.body || {}; 
-
-    if (!name || !String(name).trim()) {
-      return res.status(400).json({ message: 'Name is required' });
-    }
-    if (!email || !EMAIL_RE.test(String(email).trim())) {
-      return res.status(400).json({ message: 'A valid email is required' });
-    }
-    if (!password || String(password).length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' });
-    }
-    if (password !== confirmPassword) {
-      return res.status(400).json({ message: 'Passwords do not match' });
-    }
-
-    const normalizedEmail = String(email).trim().toLowerCase();
-    const existing = await User.findOne({ email: normalizedEmail });
-    if (existing) {
-      return res.status(409).json({ message: 'Email is already registered' });
-    }
-
-    // Public registration always creates a regular member.
-    // Client-supplied role/committee values are never trusted here.
-    const user = await User.create({
-      name: String(name).trim(),
-      email: normalizedEmail,
-      password: String(password),
-      role: 'member',
-      committee: 'عام',
-    });
-
-    setAuthCookie(res, user._id, true, user.tokenVersion);
-
-    res.status(201).json({ user });
-  } catch (error) {
-    next(error);
-  }
+  return res.status(403).json({ message: 'Public registration is disabled. Contact an administrator.' });
 }
 
 // POST /api/auth/login
@@ -67,6 +28,9 @@ export async function login(req, res, next) {
     const user = await User.findOne({ email: String(email).trim().toLowerCase() }).select('+password +tokenVersion');
     if (!user || !(await user.matchPassword(String(password)))) {
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    if (user.isActive === false) {
+      return res.status(403).json({ message: 'This account is inactive. Contact an administrator.' });
     }
 
     setAuthCookie(res, user._id, remember !== false, user.tokenVersion);
@@ -92,4 +56,24 @@ export async function logout(req, res, next) {
 // GET /api/auth/me
 export async function getMe(req, res) {
   res.status(200).json({ user: req.user });
+}
+
+export async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+    if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || newPassword.length < 12) {
+      return res.status(400).json({ message: 'Provide the current password and a new password of at least 12 characters' });
+    }
+    const user = await User.findById(req.user._id).select('+password +tokenVersion');
+    if (!user || !(await user.matchPassword(currentPassword))) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+    user.password = newPassword;
+    user.mustChangePassword = false;
+    user.tokenVersion = Number(user.tokenVersion || 0) + 1;
+    await user.save();
+    res.json({ message: 'Password changed. Sign in again with your new password.' });
+  } catch (error) {
+    next(error);
+  }
 }

@@ -3,6 +3,7 @@ import { ToastProvider } from './context/ToastContext';
 import Dashboard from './pages/Dashboard';
 import AuthOverlay from './components/AuthOverlay';
 import ToastContainer from './components/ToastContainer';
+import PasswordChange from './components/PasswordChange';
 
 function AppContent() {
   const { user, authLoading } = useAuth();
@@ -17,6 +18,10 @@ function AppContent() {
         </div>
       </div>
     );
+  }
+
+  if (user?.mustChangePassword) {
+    return <><PasswordChange /><ToastContainer /></>;
   }
 
   return (

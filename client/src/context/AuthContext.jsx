@@ -71,8 +71,18 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      await api.post('/auth/password', { currentPassword, newPassword });
+      setUser(null);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.message || 'تعذر تغيير كلمة المرور.' };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, authLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, authLoading, login, register, logout, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

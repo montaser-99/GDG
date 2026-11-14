@@ -17,6 +17,7 @@ import DeliverablesSection from '../components/evaluation/DeliverablesSection';
 import RecommendationsSection from '../components/evaluation/RecommendationsSection';
 import ProfileModal from '../components/ProfileModal';
 import Leaderboard from './Leaderboard';
+import AdminDashboard from './AdminDashboard';
 
 const NUMBER_WORDS = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
@@ -33,7 +34,7 @@ export default function Dashboard() {
   const startingCommitteeId = user?.role === 'supervisor' && assignedCommittee ? assignedCommittee.id : 'OC';
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [activeView, setActiveView] = useState('report');
+  const [activeView, setActiveView] = useState(user?.role === 'leaderboard_viewer' ? 'leaderboard' : 'report');
   const [committeeType, setCommitteeType] = useState(startingCommitteeType);
   const [committeeId, setCommitteeId] = useState(startingCommitteeId);
   const [month, setMonth] = useState(CURRENT_MONTH);
@@ -59,7 +60,7 @@ export default function Dashboard() {
   // Mirrors the original loadEvaluation(): fetch the saved evaluation from the
   // API or reset to the base template. Never auto-creates a document.
   useEffect(() => {
-    if (!['head_hr', 'supervisor'].includes(userRef.current?.role)) {
+    if (!['head_hr', 'leaderboard_viewer', 'supervisor'].includes(userRef.current?.role)) {
       setEvalLoading(false);
       return undefined;
     }
@@ -120,7 +121,7 @@ export default function Dashboard() {
   }, [month, committeeId, committeeType]);
 
   useEffect(() => {
-    if (!['head_hr', 'supervisor'].includes(user?.role)) return undefined;
+    if (!['head_hr', 'leaderboard_viewer', 'supervisor'].includes(user?.role)) return undefined;
     let active = true;
     api.get('/evaluations/months')
       .then(({ months = [] }) => {
@@ -346,7 +347,7 @@ export default function Dashboard() {
     showToast('تم نسخ نص التقرير الكامل بفرمتة Markdown!', 'info');
   };
 
-  const canUseDashboard = user?.role === 'head_hr' || (user?.role === 'supervisor' && Boolean(assignedCommittee));
+  const canUseDashboard = user?.role === 'head_hr' || user?.role === 'leaderboard_viewer' || (user?.role === 'supervisor' && Boolean(assignedCommittee));
   const committeeOptions = committeesData[committeeType].filter((committee) =>
     user?.role !== 'supervisor' || committee.id === user.committee
   );
@@ -356,8 +357,8 @@ export default function Dashboard() {
       <main className="access-pending" dir="rtl">
         <section className="access-pending-card">
           <span className="app-brand-mark" aria-hidden="true"><b>G</b><b>D</b><b>G</b></span>
-          <h1>حسابك لسه محتاج تفعيل</h1>
-          <p>تم إنشاء الحساب، لكن عرض تقارير اللجان متاح للمشرفين ومسؤولي الموارد البشرية فقط. تواصل مع مسؤول الفرع لتحديد صلاحية حسابك.</p>
+          <h1>لا تملك صلاحية عرض تقارير اللجان</h1>
+          <p>تواصل مع مسؤول الموارد البشرية لمراجعة دور حسابك أو تعيين لجنة للمشرف.</p>
           <button type="button" className="app-button app-button-secondary" onClick={logout}>تسجيل الخروج</button>
         </section>
       </main>
@@ -374,9 +375,13 @@ export default function Dashboard() {
         view={activeView}
         onNavigate={navigateToView}
         canUseLeaderboard={canUseDashboard}
+        canManageUsers={user?.role === 'head_hr'}
+        canEditReports={user?.role === 'head_hr'}
       />
 
-      {activeView === 'leaderboard' ? (
+      {activeView === 'admin' && user?.role === 'head_hr' ? (
+        <AdminDashboard />
+      ) : activeView === 'leaderboard' ? (
         <Leaderboard onOpenReport={openCommitteeReport} />
       ) : (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">

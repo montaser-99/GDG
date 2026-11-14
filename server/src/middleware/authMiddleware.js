@@ -31,6 +31,9 @@ export async function protect(req, res, next) {
     if (!user) {
       return res.status(401).json({ message: 'User no longer exists' });
     }
+    if (user.isActive === false) {
+      return res.status(403).json({ message: 'This account is inactive. Contact an administrator.' });
+    }
     if (Number(payload.tokenVersion || 0) !== Number(user.tokenVersion || 0)) {
       return res.status(401).json({ message: 'Session has been revoked' });
     }
@@ -49,4 +52,11 @@ export function authorize(...allowedRoles) {
     }
     next();
   };
+}
+
+export function requirePasswordChangeComplete(req, res, next) {
+  if (req.user?.mustChangePassword) {
+    return res.status(403).json({ message: 'Change your temporary password before using this resource' });
+  }
+  next();
 }

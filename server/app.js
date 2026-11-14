@@ -4,6 +4,7 @@ import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
 import evaluationRoutes from './src/routes/evaluationRoutes.js';
 import leaderboardRoutes from './src/routes/leaderboardRoutes.js';
+import adminRoutes from './src/routes/adminRoutes.js';
 import connectDB from './src/config/db.js';
 import { errorHandler, notFound } from './src/middleware/errorMiddleware.js';
 
@@ -63,6 +64,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', requireDatabase, authRoutes);
 app.use('/api/evaluations', requireDatabase, evaluationRoutes);
 app.use('/api/leaderboard', requireDatabase, leaderboardRoutes);
+app.use('/api/admin', requireDatabase, adminRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
