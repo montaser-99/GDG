@@ -8,8 +8,9 @@ GDG On Campus Damanhour is the campus community represented by this project. The
 
 ## Features
 
-- Member account registration and login using an HTTP-only JWT cookie.
-- Role-aware access for `head_hr`, `supervisor`, and `member` accounts.
+- Admin-provisioned account login using an HTTP-only JWT cookie; temporary passwords must be changed on first login.
+- Role-aware access for `head_hr`, `leaderboard_viewer`, `supervisor`, and legacy `member` accounts.
+- Head HR account management with live statistics, role and committee assignment, account activation, and password reset.
 - Monthly committee evaluation reports with meetings, attendance, tasks, scores, deliverables, challenges, warnings, and recommendations.
 - MongoDB-backed report creation, retrieval, updates, and Head of HR deletion.
 - Committee and month filters, plus a monthly leaderboard with rankings, summary statistics, distribution, and report insights derived from saved evaluations.
@@ -17,7 +18,7 @@ GDG On Campus Damanhour is the campus community represented by this project. The
 - Responsive Arabic right-to-left interface.
 - An in-memory MongoDB smoke test suite and an optional disposable manual-test server.
 
-Registration through the public form always creates a `member`. The current application has no UI or API for promoting users, provisioning supervisors, editing a profile, or resetting a password. New privileged accounts need to be provisioned through a trusted administrative process.
+Public registration is disabled. `head_hr` creates and manages accounts through the Admin Dashboard. New accounts receive an administrator-selected temporary password and must replace it before accessing protected sections. Existing documents without an `isActive` field remain active by default; no migration is required for that compatibility behavior.
 
 ## Technology stack
 
@@ -163,25 +164,34 @@ All application endpoints use the `/api` prefix. Protected endpoints require the
 | Method and path | Access | Purpose |
 |---|---|---|
 | `GET /api/health` | Public | Health check. |
-| `POST /api/auth/register` | Public | Register a member with `name`, `email`, `password`, and `confirmPassword`. Client-supplied roles are ignored. |
+| `POST /api/auth/register` | Public, disabled | Returns `403`; account creation is restricted to Admin. |
 | `POST /api/auth/login` | Public | Authenticate with `email` and `password`; optional `remember` controls persistent-cookie behavior. |
 | `POST /api/auth/logout` | Authenticated | Revoke the account's existing JWT sessions and clear the cookie. |
 | `GET /api/auth/me` | Authenticated | Return the current account profile. |
-| `GET /api/evaluations?committeeId=&month=` | Head of HR, assigned supervisor | List evaluations; supervisors are restricted to their assigned committee. |
-| `POST /api/evaluations` | Head of HR, assigned supervisor | Create an evaluation for a known committee and month. |
-| `GET /api/evaluations/months` | Head of HR, assigned supervisor | Return months that have saved evaluations. |
-| `GET /api/evaluations/:id` | Head of HR, assigned supervisor | Retrieve a report; supervisors can access only their committee. |
-| `PUT /api/evaluations/:id` | Head of HR, assigned supervisor | Update a report. Supervisors cannot change its committee or month. |
-| `DELETE /api/evaluations/:id` | Head of HR only | Delete an evaluation. |
-| `GET /api/leaderboard?month=...&type=tech\|non_tech` | Head of HR, assigned supervisor | Calculate monthly rankings, summary, distribution, and insights from saved evaluations. `type` is optional. |
+| `POST /api/auth/password` | Authenticated | Change a temporary password; invalidates prior sessions. |
+| `GET /api/admin/users` | Admin | Search/filter accounts and return current account statistics. |
+| `POST /api/admin/users` | Admin | Create an account. Supervisors require a valid committee. |
+| `GET /api/admin/users/:id` | Admin | Read account details. |
+| `PATCH /api/admin/users/:id` | Admin | Edit profile, role, committee, or active status. Security changes revoke existing sessions. |
+| `POST /api/admin/users/:id/reset-password` | Admin | Set a temporary password that must be changed before use. |
+| `GET /api/evaluations?committeeId=&month=` | Admin, Leaderboard, assigned Supervisor | List evaluations; supervisors are restricted to their assigned committee. |
+| `POST /api/evaluations` | Admin only | Create an evaluation for a known committee and month. |
+| `GET /api/evaluations/months` | Admin, Leaderboard, assigned Supervisor | Return months that have saved evaluations. |
+| `GET /api/evaluations/:id` | Admin, Leaderboard, assigned Supervisor | Retrieve a report; supervisors can access only their committee. |
+| `PUT /api/evaluations/:id` | Admin only | Update a report. |
+| `DELETE /api/evaluations/:id` | Admin only | Delete an evaluation. |
+| `GET /api/leaderboard?month=...&type=tech\|non_tech` | Admin, Leaderboard | Calculate monthly global rankings, summary, distribution, and insights. `type` is optional. |
 
 ## Authentication and roles
 
-- `head_hr`: can view and manage evaluations across committees and delete reports.
-- `supervisor`: can view, create, and update evaluations only for the committee assigned to the account.
-- `member`: can register and access their account profile, but cannot access evaluation or leaderboard endpoints.
+- `head_hr` (Admin): full report and leaderboard access, user management, account status, and password reset.
+- `leaderboard_viewer`: global read-only access to evaluations and the leaderboard.
+- `supervisor`: read-only access to one valid assigned committee; no global leaderboard.
+- `member`: legacy restricted role; can access their profile but not report endpoints.
 
-Passwords are hashed using bcryptjs. JWTs are sent in an HTTP-only cookie and are not stored in browser LocalStorage. Logout increments a token version on the account, invalidating all previously issued sessions for that account.
+Passwords are hashed using bcryptjs. JWTs are sent in an HTTP-only cookie and are not stored in browser LocalStorage. Logout, password resets, account deactivation, and role/committee changes increment a token version to invalidate existing sessions. The last active Admin cannot be demoted or deactivated. Authorization is enforced by Express middleware and controllers, not only by the client UI.
+
+The Admin Dashboard is available in the main navigation to `head_hr` accounts. Admins can search and filter accounts, create accounts, assign one committee to each Supervisor, change roles and status, and reset passwords. New or reset passwords are temporary; users must change them before accessing protected sections. API responses never include passwords or password hashes. Deliver temporary passwords through a secure out-of-band channel.
 
 ## Run backend tests
 
@@ -191,7 +201,7 @@ From `server`:
 npm test
 ```
 
-The smoke suite starts `mongodb-memory-server` and uses an isolated database; it does not use `MONGO_URI`. If the MongoDB test binary is not cached, the test dependency may need to download it. The suite covers authentication, validation, role and committee authorization, evaluation persistence and retrieval, leaderboard calculations, deletion permissions, and seed idempotency.
+The smoke suite starts `mongodb-memory-server` and uses an isolated database; it does not use `MONGO_URI`. If the MongoDB test binary is not cached, the test dependency may need to download it. The suite covers authentication, temporary-password replacement, role and committee authorization, Admin account management, read-only access, evaluation persistence, leaderboard calculations, deletion permissions, and seed idempotency.
 
 ## Build the frontend
 
@@ -215,10 +225,8 @@ Vite writes the production frontend to `client/dist/`. The backend remains a sep
 
 ## Future improvements
 
-- Add secure account administration for role and committee assignment.
 - Store committee definitions and membership relationships in MongoDB and expose authorized management endpoints.
-- Implement profile updates and a secure password reset flow.
-- Add login rate limiting and a stronger password policy.
+- Replace process-local rate limits with a shared production store or provider-level limits for serverless deployments.
 - Add pagination for evaluation and leaderboard APIs, and report when result limits are reached.
 - Add browser-level end-to-end tests for form interaction, refresh restoration, search, and error states.
 - Move month values to a normalized format and share committee definitions from a single source.

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-export const ROLES = ['head_hr', 'supervisor', 'member'];
+export const ROLES = ['head_hr', 'leaderboard_viewer', 'supervisor', 'member'];
 
 const userSchema = new mongoose.Schema(
   {
@@ -31,6 +31,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ROLES,
       default: 'member',
+    },
+    // Missing values in existing documents are treated as active for compatibility.
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
     },
     tokenVersion: {
       type: Number,

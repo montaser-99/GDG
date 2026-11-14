@@ -5,7 +5,7 @@ export function notFound(req, res, next) {
 // eslint-disable-next-line no-unused-vars
 export function errorHandler(err, req, res, next) {
   let statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
-  let message = err.message || 'Server error';
+  let message = process.env.NODE_ENV === 'production' ? 'Server error' : (err.message || 'Server error');
 
   if (err.name === 'ValidationError') {
     statusCode = 400;
@@ -23,6 +23,10 @@ export function errorHandler(err, req, res, next) {
   if (err.name === 'CastError') {
     statusCode = 400;
     message = 'Invalid identifier';
+  }
+
+  if (process.env.NODE_ENV === 'production' && statusCode >= 500) {
+    message = 'Server error';
   }
 
   const body = { message };
