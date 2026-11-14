@@ -217,11 +217,11 @@ async function run() {
     const foreignRead = await fetch(`${base}/api/evaluations?committeeId=Flutter&month=${encodeURIComponent(month)}`, { headers: authHeaders(supervisorCookie) });
     check('supervisor cannot query a different committee', foreignRead.status === 403);
 
-    const supervisorCreate = await fetch(`${base}/api/evaluations`, {
+    const foreignCreate = await fetch(`${base}/api/evaluations`, {
       method: 'POST', headers: { ...authHeaders(supervisorCookie), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...evaluationBody, committeeId: 'OC', committeeType: 'non_tech' }),
+      body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', committeeType: 'tech' }),
     });
-    check('supervisor cannot create a report for their own committee', supervisorCreate.status === 403);
+    check('supervisor cannot create a report for a different committee', foreignCreate.status === 403);
     const viewerUpdate = await fetch(`${base}/api/evaluations/${evaluationId}`, { method: 'PUT', headers: { ...authHeaders(viewerCookie), 'Content-Type': 'application/json' }, body: JSON.stringify({ ...evaluationBody, commScore: 88 }) });
     check('leaderboard viewer cannot update a report', viewerUpdate.status === 403);
     const viewerDelete = await fetch(`${base}/api/evaluations/${evaluationId}`, { method: 'DELETE', headers: authHeaders(viewerCookie) });
@@ -238,11 +238,16 @@ async function run() {
     const foreignDetail = await fetch(`${base}/api/evaluations/${evaluationId}`, { headers: authHeaders(otherSupervisorCookie) });
     check('supervisor cannot read another committee by record ID', foreignDetail.status === 403);
 
+    const otherSupervisorUpdate = await fetch(`${base}/api/evaluations/${evaluationId}`, {
+      method: 'PUT', headers: { ...authHeaders(otherSupervisorCookie), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...evaluationBody, commScore: 88 }),
+    });
+    check('supervisor cannot update another committee report', otherSupervisorUpdate.status === 403);
     const supervisorUpdate = await fetch(`${base}/api/evaluations/${evaluationId}`, {
       method: 'PUT', headers: { ...authHeaders(supervisorCookie), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', month: 'December 2026', commScore: 88 }),
+      body: JSON.stringify({ ...evaluationBody, commScore: 92 }),
     });
-    check('supervisor cannot update their own committee report', supervisorUpdate.status === 403);
+    check('supervisor can update their own committee report', supervisorUpdate.status === 200);
     const updateResponse = await fetch(`${base}/api/evaluations/${evaluationId}`, {
       method: 'PUT', headers: { ...authHeaders(adminCookie), 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...evaluationBody, committeeId: 'Flutter', month: 'December 2026', commScore: 88 }),

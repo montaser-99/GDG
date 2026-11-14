@@ -376,7 +376,7 @@ export default function Dashboard() {
         onNavigate={navigateToView}
         canUseLeaderboard={canUseDashboard}
         canManageUsers={user?.role === 'head_hr'}
-        canEditReports={user?.role === 'head_hr'}
+        canEditReports={user?.role === 'head_hr' || user?.role === 'supervisor'}
       />
 
       {activeView === 'admin' && user?.role === 'head_hr' ? (
