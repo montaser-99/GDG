@@ -197,10 +197,7 @@ export default function Dashboard() {
 
   const handleTypeChange = async (newType) => {
     if (user?.role === 'supervisor' && newType !== assignedCommittee?.type) return;
-    if (isEditMode) {
-      const saved = await saveCurrentEvaluation(true);
-      if (!saved) return; // keep current state; do not switch
-    }
+    if (isEditMode) setIsEditMode(false);
     const firstCommittee = committeesData[newType][0];
     setCommitteeType(newType);
     setCommitteeId(firstCommittee.id);
@@ -208,18 +205,12 @@ export default function Dashboard() {
 
   const handleCommitteeChange = async (newCommitteeId) => {
     if (user?.role === 'supervisor' && newCommitteeId !== user.committee) return;
-    if (isEditMode) {
-      const saved = await saveCurrentEvaluation(true);
-      if (!saved) return;
-    }
+    if (isEditMode) setIsEditMode(false);
     setCommitteeId(newCommitteeId);
   };
 
   const handleMonthChange = async (newMonth) => {
-    if (isEditMode) {
-      const saved = await saveCurrentEvaluation(true);
-      if (!saved) return;
-    }
+    if (isEditMode) setIsEditMode(false);
     setMonth(newMonth);
   };
 
@@ -229,11 +220,7 @@ export default function Dashboard() {
       showToast('Only LeaderBoard', 'error');
       return;
     }
-    if (isEditMode) {
-      const saved = await saveCurrentEvaluation(true);
-      if (!saved) return;
-      setIsEditMode(false);
-    }
+    if (isEditMode) setIsEditMode(false);
     setActiveView(nextView);
   };
 
@@ -242,11 +229,7 @@ export default function Dashboard() {
       showToast('Only LeaderBoard', 'error');
       return;
     }
-    if (isEditMode) {
-      const saved = await saveCurrentEvaluation(true);
-      if (!saved) return;
-      setIsEditMode(false);
-    }
+    if (isEditMode) setIsEditMode(false);
     setCommitteeType(nextType);
     setCommitteeId(nextCommitteeId);
     setMonthOptions((current) => [...new Set([...current, nextMonth])]);

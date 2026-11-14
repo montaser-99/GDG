@@ -236,6 +236,28 @@ export async function getEvaluationMonths(req, res, next) {
   }
 }
 
+export function hasEvaluationContent(evaluation) {
+  if (!evaluation) return false;
+  const hasMeetings = Array.isArray(evaluation.meetings) && evaluation.meetings.some(
+    (m) => (Number(m.attendance) > 0 || Number(m.absence) > 0 || (typeof m.title === 'string' && m.title.trim().length > 0))
+  );
+  const hasTasks = Array.isArray(evaluation.tasks) && evaluation.tasks.some(
+    (t) => (typeof t.text === 'string' && t.text.trim().length > 0)
+  );
+  const hasText = [
+    evaluation.deliverables,
+    evaluation.challenges,
+    evaluation.solutions,
+    evaluation.attendanceNotes,
+    evaluation.warnings,
+    evaluation.filteration,
+    evaluation.bestMember,
+    evaluation.generalRecs
+  ].some((field) => typeof field === 'string' && field.trim().length > 0);
+
+  return Boolean(hasMeetings || hasTasks || hasText);
+}
+
 // GET /api/leaderboard?month=...&type=tech|non_tech
 export async function getLeaderboard(req, res, next) {
   try {
@@ -257,10 +279,14 @@ export async function getLeaderboard(req, res, next) {
       filter.committeeId = req.user.committee;
     }
 
-    const evaluations = await Evaluation.find(filter)
+    const rawEvaluations = await Evaluation.find(filter)
       .sort({ updatedAt: -1 })
       .limit(200)
       .lean();
+
+    // Only evaluations with actual content (meetings, tasks, or written text) appear in reports/leaderboard
+    const evaluations = rawEvaluations.filter(hasEvaluationContent);
+
     const rankings = evaluations.map((evaluation) => {
       const { attendanceRate, overallScore } = computeEvaluationScore(evaluation);
       const committee = getCommitteeInfo(evaluation.committeeId, evaluation.committeeType);

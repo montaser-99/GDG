@@ -135,8 +135,8 @@ export default function Leaderboard({ onOpenReport }) {
       <section className="leaderboard-stat-grid" aria-label="ملخص الشهر">
         <Stat label="تقارير محفوظة" value={data.summary.totalCommittees} detail="لجنة خلال الشهر" icon="fa-people-group" tone="tone-blue" />
         <Stat label="المستوى العام" value={data.summary.totalCommittees ? getScoreBadge(data.summary.avgOverallScore).text : '—'} detail="مستوى أداء اللجان هذا الشهر" icon="fa-chart-line" tone="tone-green" />
-        <Stat label="متوسط الحضور" value={`${data.summary.avgAttendance}%`} detail="من بيانات الاجتماعات" icon="fa-user-check" tone="tone-yellow" />
-        <Stat label="الاجتماعات" value={data.summary.totalMeetings} detail={`إنجاز المهام ${data.summary.avgDeadline}%`} icon="fa-calendar-check" tone="tone-red" />
+        <Stat label="متوسط الحضور" value={data.summary.totalCommittees ? `${data.summary.avgAttendance}%` : '—'} detail={data.summary.totalCommittees ? "من بيانات الاجتماعات" : "لا توجد بيانات"} icon="fa-user-check" tone="tone-yellow" />
+        <Stat label="الاجتماعات" value={data.summary.totalMeetings} detail={data.summary.totalCommittees ? `إنجاز المهام ${data.summary.avgDeadline}%` : '—'} icon="fa-calendar-check" tone="tone-red" />
       </section>
 
       <section className="analytics-grid">
@@ -246,7 +246,13 @@ export default function Leaderboard({ onOpenReport }) {
               </tbody>
             </table>
           </div>
-        ) : <div className="leaderboard-empty">مفيش نتائج مطابقة للبحث.</div>}
+        ) : (
+          <div className="leaderboard-empty">
+            {query
+              ? 'مفيش نتائج مطابقة للبحث.'
+              : 'لا توجد تقارير مسجلة لهذا الشهر حتى الآن. ستظهر اللجان هنا فور تعديل وحفظ تقاريرها.'}
+          </div>
+        )}
       </section>
     </main>
   );

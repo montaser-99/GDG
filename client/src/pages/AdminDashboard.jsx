@@ -31,39 +31,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [clearingMonth, setClearingMonth] = useState('فبراير');
-  const [clearing, setClearing] = useState(false);
 
   const committeeOptions = useMemo(() => committeesData, []);
-
-  const handleClearMonth = async () => {
-    if (!clearingMonth.trim()) return;
-    if (!window.confirm(`هل أنت متأكد من حذف جميع تقارير شهر "${clearingMonth}"؟`)) return;
-    setClearing(true);
-    try {
-      const res = await api.delete(`/evaluations/clear-month/${encodeURIComponent(clearingMonth.trim())}`);
-      showToast(res.message || `تم حذف تقارير شهر ${clearingMonth} بنجاح!`, 'success');
-      loadUsers();
-    } catch (err) {
-      showToast(err.message || 'فشل حذف بيانات الشهر', 'error');
-    } finally {
-      setClearing(false);
-    }
-  };
-
-  const handleResetAllEvaluations = async () => {
-    if (!window.confirm('تحذير: هل أنت متأكد من حذف كافة تقارير التقييمات لجميع الشهور للبدء من جديد تماماً؟')) return;
-    setClearing(true);
-    try {
-      const res = await api.delete('/evaluations/reset-all');
-      showToast(res.message || 'تم تفريغ كافة بيانات التقارير بنجاح! المنصة جاهزة للبدء.', 'success');
-      loadUsers();
-    } catch (err) {
-      showToast(err.message || 'فشل تفريغ البيانات', 'error');
-    } finally {
-      setClearing(false);
-    }
-  };
   const loadUsers = async () => {
     setLoading(true);
     setError('');
@@ -204,54 +173,6 @@ export default function AdminDashboard() {
         <div className="mt-4 flex items-center justify-between text-sm text-slate-400">
           <span>عدد النتائج: {pagination.total}</span>
           <div className="flex items-center gap-3"><button type="button" className="text-action" disabled={page <= 1 || loading} onClick={() => setPage((current) => Math.max(1, current - 1))}>السابق</button><span>{pagination.page} / {pagination.totalPages}</span><button type="button" className="text-action" disabled={page >= pagination.totalPages || loading} onClick={() => setPage((current) => current + 1)}>التالي</button></div>
-        </div>
-      </section>
-
-      <section className="glass-card mt-8 rounded-2xl p-6 border-l-4 border-l-amber-500">
-        <div className="flex items-center gap-3 mb-2">
-          <i className="fa-solid fa-broom text-xl text-amber-400" />
-          <h2 className="text-lg font-bold text-white">تنظيف بيانات التقارير والبدء من جديد (Data Reset)</h2>
-        </div>
-        <p className="text-xs text-slate-400 mb-5">
-          يمكنك حذف التقارير والبيانات التجريبية لشهر معين (مثل شهر فبراير) لتفريغها وإعادة تعبئتها من الصفر، أو تفريغ كافة بيانات التقارير في المنصة.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-xl">
-            <h3 className="text-sm font-bold text-slate-200 mb-2">حذف تقارير شهر محدد</h3>
-            <p className="text-xs text-slate-400 mb-3">حذف جميع التقارير المحفوظة لشهر معين وتفريغها لتبدأ كأنها لم تُملأ بعد.</p>
-            <div className="flex gap-2">
-              <input
-                className="auth-input flex-1"
-                value={clearingMonth}
-                onChange={(e) => setClearingMonth(e.target.value)}
-                placeholder="اسم الشهر (مثال: فبراير)"
-              />
-              <button
-                type="button"
-                className="app-button app-button-secondary text-amber-400 hover:text-amber-300"
-                disabled={clearing || !clearingMonth.trim()}
-                onClick={handleClearMonth}
-              >
-                <i className="fa-solid fa-trash-can" />
-                <span>حذف شهر {clearingMonth}</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="p-4 bg-slate-900/50 border border-red-900/40 rounded-xl">
-            <h3 className="text-sm font-bold text-rose-300 mb-2">تفريغ كل التقارير (البدء من الصفر تماماً)</h3>
-            <p className="text-xs text-slate-400 mb-3">حذف كافة التقارير التجريبية لجميع اللجان وجميع الشهور، مع الاحتفاظ بالحسابات.</p>
-            <button
-              type="button"
-              className="app-button bg-red-600/20 text-red-400 hover:bg-red-600/30 border border-red-500/30 w-full justify-center"
-              disabled={clearing}
-              onClick={handleResetAllEvaluations}
-            >
-              <i className="fa-solid fa-triangle-exclamation" />
-              <span>حذف كافة التقارير والبدء من جديد</span>
-            </button>
-          </div>
         </div>
       </section>
 
