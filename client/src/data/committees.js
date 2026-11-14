@@ -57,7 +57,7 @@ export const MONTHS = Array.from({ length: 14 }, (_, index) =>
 // Empty default template used when no saved evaluation exists
 export const defaultFormValues = {
   supervisor: '',
-  target: '',
+  target: 'HR LeaderBoard',
   commScore: 0,
   deadlineScore: 0,
   attendanceNotes: '',

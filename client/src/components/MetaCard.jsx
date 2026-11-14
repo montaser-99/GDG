@@ -101,9 +101,8 @@ export default function MetaCard({
           <input
             type="text"
             id="meta-target"
-            value={target}
-            readOnly={!isEditMode}
-            onChange={(e) => onTargetChange(e.target.value)}
+            value="HR LeaderBoard"
+            readOnly
             className={targetClass}
           />
         </div>

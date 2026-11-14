@@ -80,7 +80,7 @@ export default function Dashboard() {
           setForm((prev) => ({
             ...prev,
             supervisor: saved.supervisor ? saved.supervisor : prev.supervisor,
-            target: saved.target ? saved.target : prev.target,
+            target: 'HR LeaderBoard',
             commScore: saved.commScore ?? 90,
             deadlineScore: saved.deadlineScore ?? 85,
             attendanceNotes: saved.attendanceNotes || '',
@@ -102,7 +102,7 @@ export default function Dashboard() {
           setForm((prev) => ({
             ...defaultFormValues,
             supervisor: currentUser ? currentUser.name : prev.supervisor,
-            target: prev.target,
+            target: 'HR LeaderBoard',
           }));
           setMeetings(defaults.meetings);
           setTasks(defaults.tasks);

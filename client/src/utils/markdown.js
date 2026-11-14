@@ -17,6 +17,7 @@ export function buildMarkdownReport({
 }) {
   return `# تقرير التقييم الشهري - GDG On Campus Damanhour
 **اسم اللجنة:** ${committeeName}
+**الفرع والجهة الموجه إليها:** HR LeaderBoard
 **الشهر:** ${month}
 **مُعدّ التقرير:** ${supervisor}
 **التقييم الشامل:** ${scoreText}
