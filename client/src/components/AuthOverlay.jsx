@@ -36,8 +36,7 @@ export default function AuthOverlay() {
           <img src={gdgLogo} alt="GDG On Campus Damanhour University" className="auth-brand-logo" />
         </div>
         <div className="auth-heading">
-          <p className="eyebrow auth-eyebrow-large">منصة متابعة الأداء وتقييم اللجان</p>
-          <h1 id="auth-title">سجّل دخولك لمتابعة تقارير اللجان.</h1>
+          <h1 id="auth-title" className="eyebrow auth-eyebrow-large">منصة متابعة الأداء وتقييم اللجان</h1>
         </div>
         <form className="auth-form" onSubmit={handleLogin}>
           <label className="auth-field">
