@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { roleLabel } from '../utils/labels';
+import gdgLogo from '../assets/gdg-logo.png';
 
 export default function Header({
   isEditMode,
@@ -18,13 +19,7 @@ export default function Header({
     <header className="app-header no-print" dir="rtl">
       <div className="app-header-inner">
         <a className="app-brand" href="#home" onClick={(event) => event.preventDefault()}>
-          <span className="app-brand-mark" aria-hidden="true">
-            <b>G</b><b>D</b><b>G</b>
-          </span>
-          <span className="app-brand-copy">
-            <strong>GDG On Campus</strong>
-            <small>Damanhour University</small>
-          </span>
+          <img src={gdgLogo} alt="GDG On Campus Damanhour University" className="app-brand-logo" />
         </a>
 
         <nav className="app-header-nav" aria-label="التنقل الرئيسي">

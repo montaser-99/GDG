@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import gdgLogo from '../assets/gdg-logo.png';
 
 export default function AuthOverlay() {
   const { login } = useAuth();
@@ -32,13 +33,11 @@ export default function AuthOverlay() {
     <main className="auth-page" dir="rtl">
       <section className="auth-card" aria-labelledby="auth-title">
         <div className="auth-brand-row">
-          <span className="app-brand-mark" aria-hidden="true"><b>G</b><b>D</b><b>G</b></span>
-          <span><strong>GDG On Campus</strong><small>Damanhour University</small></span>
+          <img src={gdgLogo} alt="GDG On Campus Damanhour University" className="auth-brand-logo" />
         </div>
         <div className="auth-heading">
-          <p className="eyebrow">منصة متابعة الأداء</p>
-          <h1 id="auth-title">أهلًا بيك</h1>
-          <p>سجّل دخولك لمتابعة تقارير اللجان.</p>
+          <p className="eyebrow auth-eyebrow-large">منصة متابعة الأداء وتقييم اللجان</p>
+          <h1 id="auth-title">سجّل دخولك لمتابعة تقارير اللجان.</h1>
         </div>
         <form className="auth-form" onSubmit={handleLogin}>
           <label className="auth-field">
