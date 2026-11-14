@@ -175,7 +175,6 @@ export default function Dashboard() {
         ? await api.put(`/evaluations/${evalId}`, payload)
         : await api.post('/evaluations', payload);
       setEvalId(data.evaluation._id);
-      setForm((current) => ({ ...current, supervisor: data.evaluation.supervisor || current.supervisor }));
       if (!silent) {
         showToast(`تم حفظ تقييم ${committeeName} لشهر ${month} بنجاح! 💾`, 'success');
       }
@@ -225,9 +224,6 @@ export default function Dashboard() {
   };
 
   const navigateToView = async (nextView) => {
-    const canViewRankings = ['head_hr', 'leaderboard_viewer'].includes(user?.role);
-    if (nextView === 'leaderboard' && !canViewRankings) return;
-    if (nextView === 'admin' && user?.role !== 'head_hr') return;
     if (nextView === activeView) return;
     if (isEditMode) {
       const saved = await saveCurrentEvaluation(true);
@@ -352,8 +348,6 @@ export default function Dashboard() {
   };
 
   const canUseDashboard = user?.role === 'head_hr' || user?.role === 'leaderboard_viewer' || (user?.role === 'supervisor' && Boolean(assignedCommittee));
-  const canViewRankings = ['head_hr', 'leaderboard_viewer'].includes(user?.role);
-  const canEditReports = ['head_hr', 'supervisor'].includes(user?.role);
   const committeeOptions = committeesData[committeeType].filter((committee) =>
     user?.role !== 'supervisor' || committee.id === user.committee
   );
@@ -380,15 +374,14 @@ export default function Dashboard() {
         onOpenProfile={() => setProfileOpen(true)}
         view={activeView}
         onNavigate={navigateToView}
-        canUseLeaderboard={canViewRankings}
+        canUseLeaderboard={canUseDashboard}
         canManageUsers={user?.role === 'head_hr'}
-        canEditReports={canEditReports}
-        hasEvaluation={Boolean(evalId)}
+        canEditReports={user?.role === 'head_hr'}
       />
 
       {activeView === 'admin' && user?.role === 'head_hr' ? (
         <AdminDashboard />
-      ) : activeView === 'leaderboard' && canViewRankings ? (
+      ) : activeView === 'leaderboard' ? (
         <Leaderboard onOpenReport={openCommitteeReport} />
       ) : (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
@@ -411,8 +404,6 @@ export default function Dashboard() {
           onSupervisorChange={(v) => handleFormChange('supervisor', v)}
           onTargetChange={(v) => handleFormChange('target', v)}
         />
-
-        {canViewRankings && <Leaderboard embedded onOpenReport={openCommitteeReport} />}
 
         <KpiCards
           score={score}

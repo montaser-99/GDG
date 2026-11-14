@@ -11,7 +11,6 @@ export default function Header({
   canUseLeaderboard,
   canManageUsers,
   canEditReports,
-  hasEvaluation,
 }) {
   const { user, logout } = useAuth();
 
@@ -67,7 +66,7 @@ export default function Header({
             <>
               <button type="button" className="app-button app-button-secondary" onClick={onToggleEdit}>
                 <i className={`fa-solid ${isEditMode ? 'fa-floppy-disk' : 'fa-pen-to-square'}`} aria-hidden="true" />
-                <span>{isEditMode ? 'حفظ التعديلات' : hasEvaluation ? 'تعديل التقرير' : 'إنشاء التقرير'}</span>
+                <span>{isEditMode ? 'حفظ التعديلات' : 'تعديل التقرير'}</span>
               </button>
               <button type="button" className="app-button app-button-quiet" onClick={onCopyReport}>
                 <i className="fa-regular fa-copy" aria-hidden="true" />

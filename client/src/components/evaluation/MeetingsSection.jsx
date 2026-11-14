@@ -65,7 +65,7 @@ export default function MeetingsSection({
           {isEditMode && (
             <button
               onClick={onAdd}
-              className="px-3 py-1 bg-gdg-blue/20 text-gdg-blue hover:bg-gdg-blue/30 rounded-lg text-xs font-bold transition flex items-center gap-1 no-print"
+              className="px-3 py-1 bg-gdg-blue/20 text-gdg-blue hover:bg-gdg-blue/30 rounded-lg text-xs font-bold transition flex items-center gap-1"
             >
               <i className="fa-solid fa-plus"></i> <span id="add-meeting-btn-text">{copy.addButton}</span>
             </button>

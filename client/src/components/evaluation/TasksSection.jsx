@@ -98,7 +98,7 @@ export default function TasksSection({ tasks, isEditMode, onAdd, onRemove, onUpd
         {isEditMode && (
           <button
             onClick={() => setAddModalOpen(true)}
-            className="px-3 py-1 bg-gdg-green/20 text-gdg-green hover:bg-gdg-green/30 rounded-lg text-xs font-bold transition flex items-center gap-1 no-print"
+            className="px-3 py-1 bg-gdg-green/20 text-gdg-green hover:bg-gdg-green/30 rounded-lg text-xs font-bold transition flex items-center gap-1"
           >
             <i className="fa-solid fa-plus"></i> إضافة مهمة
           </button>
@@ -152,7 +152,7 @@ export default function TasksSection({ tasks, isEditMode, onAdd, onRemove, onUpd
 
                     <button
                       onClick={() => onRemove(idx)}
-                      className="p-2 text-red-400 hover:text-red-300 rounded-lg bg-red-500/10 border border-red-500/20 text-xs no-print"
+                      className="p-2 text-red-400 hover:text-red-300 rounded-lg bg-red-500/10 border border-red-500/20 text-xs"
                       title="حذف المهمة"
                     >
                       <i className="fa-solid fa-trash"></i>

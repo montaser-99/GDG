@@ -78,32 +78,6 @@ body {
     border-bottom: 2px solid #4285f4 !important;
     color: #0f172a !important;
   }
-  .leaderboard-page {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 0 1rem !important;
-  }
-  .leaderboard-controls,
-  .search-field,
-  .leaderboard-error button,
-  .leaderboard-page .text-action {
-    display: none !important;
-  }
-  .rankings-table-wrap { overflow: visible !important; }
-  .rankings-table { min-width: 0 !important; table-layout: fixed; }
-  .rankings-table th,
-  .rankings-table td {
-    padding: 0.35rem 0.2rem !important;
-    font-size: 8pt !important;
-    white-space: normal !important;
-  }
-  .leaderboard-stat,
-  .podium-card,
-  .leaderboard-panel {
-    box-shadow: none !important;
-    break-inside: avoid;
-  }
 }
 
 /* Product theme: quiet neutral surfaces with GDG colors reserved for actions and status. */

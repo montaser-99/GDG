@@ -37,7 +37,7 @@ function InsightPanel({ title, icon, items, empty, tone, renderItem }) {
   );
 }
 
-export default function Leaderboard({ onOpenReport, embedded = false }) {
+export default function Leaderboard({ onOpenReport }) {
   const [month, setMonth] = useState(MONTHS[1] || MONTHS[0]);
   const [type, setType] = useState('all');
   const [query, setQuery] = useState('');
@@ -91,17 +91,15 @@ export default function Leaderboard({ onOpenReport, embedded = false }) {
   const totalDistribution = Object.values(data.distribution).reduce((sum, value) => sum + value, 0);
   const openReport = (item) => onOpenReport({ committeeId: item.committeeId, committeeType: item.committeeType, month: item.month });
 
-  const Page = embedded ? 'section' : 'main';
-
   return (
-    <Page id={embedded ? 'hr-leaderboard' : undefined} className={`leaderboard-page${embedded ? ' leaderboard-embedded' : ''}`} dir="rtl">
+    <main className="leaderboard-page" dir="rtl">
       <div className="leaderboard-page-heading">
         <div>
           <p className="eyebrow">مؤشرات الأداء الشهرية</p>
           <h1>ترتيب اللجان والتحليلات</h1>
           <p className="page-description">مقارنة مبنية على التقارير المحفوظة، مع وصول سريع لتقرير كل لجنة.</p>
         </div>
-        <div className="leaderboard-controls no-print">
+        <div className="leaderboard-controls">
           <label className="control-field">
             <span>الشهر</span>
             <select value={month} onChange={(event) => setMonth(event.target.value)}>
@@ -248,7 +246,7 @@ export default function Leaderboard({ onOpenReport, embedded = false }) {
       <section className="leaderboard-section leaderboard-panel rankings-panel">
         <div className="section-title-row rankings-heading">
           <div><p className="eyebrow">كل النتائج</p><h2>ترتيب اللجان</h2></div>
-          <label className="search-field no-print">
+          <label className="search-field">
             <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
             <span className="sr-only">ابحث عن لجنة أو مشرف</span>
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث عن لجنة أو مشرف" />
@@ -275,6 +273,6 @@ export default function Leaderboard({ onOpenReport, embedded = false }) {
           </div>
         ) : <div className="leaderboard-empty">مفيش نتائج مطابقة للبحث.</div>}
       </section>
-    </Page>
+    </main>
   );
 }
