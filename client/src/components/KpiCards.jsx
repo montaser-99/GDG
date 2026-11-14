@@ -1,4 +1,4 @@
-export default function KpiCards({ score, scoreBadge, attendanceRate, meetingsCount, deadlineScore, deliverables }) {
+export default function KpiCards({ score, scoreBadge, attendanceRate, meetingsCount, deadlineScore, deliverables, hasStarted = true }) {
   const deliverablesRegistered = Boolean(deliverables?.trim());
 
   return (
@@ -19,8 +19,12 @@ export default function KpiCards({ score, scoreBadge, attendanceRate, meetingsCo
 
       <article className="glass-card print-card rounded-2xl p-5 border-l-4 border-l-gdg-yellow">
         <p className="text-xs font-bold text-slate-400">الالتزام بالمواعيد</p>
-        <h2 className="text-3xl font-extrabold text-white mt-2" id="kpi-tasks-display">{deadlineScore}%</h2>
-        <p className="text-xs text-slate-400 mt-2">مؤشر الالتزام بالمواعيد</p>
+        <h2 className="text-3xl font-extrabold text-white mt-2" id="kpi-tasks-display">
+          {hasStarted ? `${deadlineScore}%` : '—'}
+        </h2>
+        <p className="text-xs text-slate-400 mt-2">
+          {hasStarted ? 'مؤشر الالتزام بالمواعيد' : 'في انتظار التقييم'}
+        </p>
       </article>
 
       <article className="glass-card print-card rounded-2xl p-5 border-l-4 border-l-gdg-red">
@@ -28,7 +32,9 @@ export default function KpiCards({ score, scoreBadge, attendanceRate, meetingsCo
         <h2 className="text-xl font-extrabold text-white mt-2" id="kpi-readiness-display">
           {deliverablesRegistered ? 'تم تسجيلها' : 'لم تُسجل بعد'}
         </h2>
-        <p className="text-xs text-slate-400 mt-2">الحالة حسب التقرير المحفوظ</p>
+        <p className="text-xs text-slate-400 mt-2">
+          {deliverablesRegistered ? 'الحالة حسب التقرير المحفوظ' : 'في انتظار التسجيل'}
+        </p>
       </article>
     </section>
   );

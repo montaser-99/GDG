@@ -496,6 +496,11 @@ textarea {
   color: #dc2626;
   border-color: rgba(239, 68, 68, 0.3);
 }
+.rating-badge-pending {
+  background: rgba(148, 163, 184, 0.14);
+  color: #64748b;
+  border-color: rgba(148, 163, 184, 0.3);
+}
 
 .access-pending { min-height: 100vh; display: grid; place-items: center; padding: 1rem; background: var(--app-bg); }
 .access-pending-card { max-width: 480px; width: 100%; padding: 2rem; border: 1px solid var(--app-border); border-radius: 18px; background: #fff; box-shadow: var(--app-shadow); text-align: center; }

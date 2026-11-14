@@ -1,6 +1,6 @@
 // Scoring formula and status mappings (ported unchanged from the original)
 
-export function computeAttendanceRate(meetings) {
+export function computeAttendanceRate(meetings = []) {
   let totalAttendance = 0;
   let totalAbsence = 0;
 
@@ -10,7 +10,7 @@ export function computeAttendanceRate(meetings) {
   });
 
   const totalPeople = totalAttendance + totalAbsence;
-  return totalPeople > 0 ? Math.round((totalAttendance / totalPeople) * 100) : 100;
+  return totalPeople > 0 ? Math.round((totalAttendance / totalPeople) * 100) : 0;
 }
 
 // Overall Score = attendance * 0.30 + communication * 0.35 + deadlines * 0.35
@@ -21,7 +21,17 @@ export function computeScore(attendanceRate, commScore, deadlineScore) {
 const BADGE_BASE =
   'inline-block mt-2 px-3 py-1 text-xs font-bold rounded-full border print-badge';
 
-export function getScoreBadge(score) {
+export function getScoreBadge(score, hasStarted = true) {
+  if (!hasStarted) {
+    return {
+      text: 'لم يبدأ بعد',
+      className: `${BADGE_BASE} bg-slate-500/20 text-slate-300 border-slate-500/30`,
+      badgeClass: 'rating-badge rating-badge-pending',
+      tone: 'tone-blue',
+      description: 'في انتظار بدء أنشطة الشهر',
+    };
+  }
+
   const numericScore = Number(score) || 0;
 
   if (numericScore >= 90) {

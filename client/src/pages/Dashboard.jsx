@@ -293,9 +293,16 @@ export default function Dashboard() {
   };
 
   // ---------- Derived KPIs (equivalent of updateCalculations) ----------
+  const hasStarted = Boolean(
+    meetings.length > 0 ||
+    tasks.length > 0 ||
+    (form.deliverables && form.deliverables.trim()) ||
+    (form.challenges && form.challenges.trim()) ||
+    (form.attendanceNotes && form.attendanceNotes.trim())
+  );
   const attendanceRate = computeAttendanceRate(meetings);
   const score = computeScore(attendanceRate, form.commScore, form.deadlineScore);
-  const scoreBadge = getScoreBadge(score);
+  const scoreBadge = getScoreBadge(score, hasStarted);
 
   const handleCopyReport = async () => {
     const markdownText = buildMarkdownReport({
@@ -428,6 +435,7 @@ export default function Dashboard() {
           meetingsCount={meetings.length}
           deadlineScore={form.deadlineScore}
           deliverables={form.deliverables}
+          hasStarted={hasStarted}
         />
 
         <div className="relative">

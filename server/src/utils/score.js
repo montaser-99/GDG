@@ -12,7 +12,7 @@ export function computeAttendanceRate(meetings = []) {
   }
 
   const totalPeople = totalAttendance + totalAbsence;
-  return totalPeople > 0 ? Math.round((totalAttendance / totalPeople) * 100) : 100;
+  return totalPeople > 0 ? Math.round((totalAttendance / totalPeople) * 100) : 0;
 }
 
 export function computeOverallScore(attendanceRate, commScore, deadlineScore) {
