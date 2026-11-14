@@ -355,6 +355,29 @@ export default function Dashboard() {
     showToast('تم نسخ نص التقرير الكامل بفرمتة Markdown!', 'info');
   };
 
+  const handleDeleteReport = async () => {
+    if (!evalId) return;
+    if (!window.confirm(`هل أنت متأكد من تفريغ وحذف تقرير ${committeeName} لشهر ${month} للبدء من جديد؟`)) {
+      return;
+    }
+    try {
+      await api.delete(`/evaluations/${evalId}`);
+      setEvalId(null);
+      const currentUser = userRef.current;
+      const defaults = getDefaultEvaluation(committeeId, committeeType, currentUser?.name);
+      setForm({
+        ...defaultFormValues,
+        supervisor: currentUser ? currentUser.name : '',
+        target: 'HR LeaderBoard',
+      });
+      setMeetings(defaults.meetings);
+      setTasks(defaults.tasks);
+      showToast(`تم تفريغ تقرير ${committeeName} لشهر ${month} بنجاح! 🗑️`, 'info');
+    } catch (err) {
+      showToast(`فشل تفريغ التقرير: ${err.message}`, 'error');
+    }
+  };
+
   const canUseDashboard = user?.role === 'head_hr' || user?.role === 'leaderboard_viewer' || (user?.role === 'supervisor' && Boolean(assignedCommittee));
   const committeeOptions = committeesData[committeeType].filter((committee) =>
     user?.role !== 'supervisor' || committee.id === user.committee
@@ -379,6 +402,8 @@ export default function Dashboard() {
         isEditMode={isEditMode}
         onToggleEdit={toggleEditMode}
         onCopyReport={handleCopyReport}
+        onDeleteReport={handleDeleteReport}
+        canDeleteReport={user?.role === 'head_hr' && Boolean(evalId)}
         onOpenProfile={() => setProfileOpen(true)}
         view={activeView}
         onNavigate={navigateToView}

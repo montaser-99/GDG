@@ -9,6 +9,8 @@
     "start": "node server.js",
     "seed": "node seed.js",
     "seed:all": "node seed-accounts.js",
+    "clear:month": "node clear-data.js",
+    "clear:all": "node clear-data.js ALL",
     "test": "node scripts/smoke.test.js"
   },
   "dependencies": {

@@ -191,6 +191,34 @@ export async function deleteEvaluation(req, res, next) {
   }
 }
 
+// DELETE /api/evaluations/clear-month/:month
+export async function clearMonthEvaluations(req, res, next) {
+  try {
+    const rawMonth = req.params.month || '';
+    const decodedMonth = decodeURIComponent(rawMonth).trim();
+    if (!decodedMonth) {
+      return res.status(400).json({ message: 'Month parameter is required' });
+    }
+    const filter = {
+      month: { $regex: decodedMonth, $options: 'i' },
+    };
+    const result = await Evaluation.deleteMany(filter);
+    res.json({ message: `Successfully deleted ${result.deletedCount} evaluations for month ${decodedMonth}`, count: result.deletedCount });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// DELETE /api/evaluations/reset-all
+export async function resetAllEvaluations(req, res, next) {
+  try {
+    const result = await Evaluation.deleteMany({});
+    res.json({ message: `Successfully cleared all evaluations (${result.deletedCount} records deleted)`, count: result.deletedCount });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // GET /api/evaluations/months
 export async function getEvaluationMonths(req, res, next) {
   try {

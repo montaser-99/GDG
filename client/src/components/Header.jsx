@@ -6,6 +6,8 @@ export default function Header({
   isEditMode,
   onToggleEdit,
   onCopyReport,
+  onDeleteReport,
+  canDeleteReport,
   onOpenProfile,
   view,
   onNavigate,
@@ -67,6 +69,17 @@ export default function Header({
                 <i className="fa-regular fa-copy" aria-hidden="true" />
                 <span>نسخ التقرير</span>
               </button>
+              {canDeleteReport && (
+                <button
+                  type="button"
+                  className="app-button app-button-quiet text-rose-400 hover:text-rose-300"
+                  onClick={onDeleteReport}
+                  title="تفريغ هذا التقرير للبدء من جديد"
+                >
+                  <i className="fa-solid fa-trash-can" aria-hidden="true" />
+                  <span>تفريغ التقرير</span>
+                </button>
+              )}
             </>
           )}
           <button type="button" className="app-button app-button-primary" onClick={() => window.print()}>
