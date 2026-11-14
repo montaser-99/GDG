@@ -1,7 +1,7 @@
+
 import { committeesData, MONTHS } from '../data/committees';
 
-// Read-only/edit styling mirrors the original toggleEditMode behavior:
-// inputs carry read-only: variants and the readonly attribute is flipped.
+// Read-only/edit styling mirrors the original toggleEditMode behavior.
 const supervisorTargetClass =
   'w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold text-sm focus:outline-none focus:border-gdg-blue transition read-only:bg-transparent read-only:border-none read-only:p-0 read-only:text-slate-200';
 
@@ -21,7 +21,6 @@ export default function MetaCard({
   canSelectCommittees = true,
   supervisorEditable = true,
   supervisor,
-  recipient = 'HR Leaderboard',
   target,
   isEditMode,
   onTypeChange,
@@ -35,10 +34,12 @@ export default function MetaCard({
     <div className="glass-card print-card rounded-2xl p-6 mb-8 relative overflow-hidden">
       <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-gdg-blue via-gdg-red via-gdg-yellow to-gdg-green"></div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Committee Category */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">تصنيف اللجنة</label>
+        <div className="order-3">
+          <label className="block text-xs font-semibold text-slate-400 mb-1">
+            تصنيف اللجنة
+          </label>
           <select
             id="meta-committee-type"
             value={committeeType}
@@ -52,8 +53,10 @@ export default function MetaCard({
         </div>
 
         {/* Committee Name */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">اسم اللجنة</label>
+        <div className="order-4">
+          <label className="block text-xs font-semibold text-slate-400 mb-1">
+            اسم اللجنة
+          </label>
           <select
             id="meta-committee"
             value={committeeId}
@@ -69,8 +72,11 @@ export default function MetaCard({
           </select>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">الشهر والتقويم</label>
+        {/* Month */}
+        <div className="order-5">
+          <label className="block text-xs font-semibold text-slate-400 mb-1">
+            الشهر والتقويم
+          </label>
           <select
             id="meta-month"
             value={month}
@@ -85,8 +91,11 @@ export default function MetaCard({
           </select>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">Report Creator (مُعدّ التقرير)</label>
+        {/* Report Creator */}
+        <div className="order-1">
+          <label className="block text-xs font-semibold text-slate-400 mb-1">
+            Report Creator (مُعدّ التقرير)
+          </label>
           <input
             type="text"
             id="meta-supervisor"
@@ -96,13 +105,11 @@ export default function MetaCard({
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">Report Recipient</label>
-          <input type="text" id="meta-recipient" value={recipient} readOnly className={supervisorTargetClass} />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">الفرع والجهة الموجه إليها</label>
+        {/* Report Target */}
+        <div className="order-2">
+          <label className="block text-xs font-semibold text-slate-400 mb-1">
+            الفرع والجهة الموجه إليها
+          </label>
           <input
             type="text"
             id="meta-target"

@@ -19,7 +19,6 @@ export default function PrintHeader() {
         <div className="text-left text-xs text-slate-600 font-bold">
           <p>Google Developer Groups On Campus</p>
           <p>Damanhour University</p>
-          <p>Report Recipient: HR Leaderboard</p>
         </div>
       </div>
     </div>

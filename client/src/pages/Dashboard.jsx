@@ -403,7 +403,6 @@ export default function Dashboard() {
           canSelectCommittees={user?.role === 'head_hr'}
           supervisorEditable={user?.role === 'head_hr'}
           supervisor={form.supervisor}
-          recipient="HR Leaderboard"
           target={form.target}
           isEditMode={isEditMode}
           onTypeChange={handleTypeChange}
@@ -412,6 +411,8 @@ export default function Dashboard() {
           onSupervisorChange={(v) => handleFormChange('supervisor', v)}
           onTargetChange={(v) => handleFormChange('target', v)}
         />
+
+        {canViewRankings && <Leaderboard embedded onOpenReport={openCommitteeReport} />}
 
         <KpiCards
           score={score}

@@ -44,8 +44,15 @@ async function run() {
 
     const printableHeader = await readFile(path.resolve(serverRoot, '../client/src/components/PrintHeader.jsx'), 'utf8');
     const reportMeta = await readFile(path.resolve(serverRoot, '../client/src/components/MetaCard.jsx'), 'utf8');
-    check('print report labels the authenticated creator separately from fixed HR Leaderboard recipient',
-      printableHeader.includes('Report Recipient: HR Leaderboard') && reportMeta.includes('Report Creator') && reportMeta.includes("recipient = 'HR Leaderboard'") && reportMeta.includes('value={supervisor}'));
+    const reportDashboard = await readFile(path.resolve(serverRoot, '../client/src/pages/Dashboard.jsx'), 'utf8');
+    check('report removes recipient and places HR Leaderboard after creator, target, and committee metadata',
+      !printableHeader.includes('Report Recipient') && !reportMeta.toLowerCase().includes('recipient') && !reportDashboard.toLowerCase().includes('recipient') &&
+      reportMeta.includes('Report Creator') && reportMeta.includes('value={supervisor}') && reportMeta.includes('value={target}') &&
+      /<div className="order-1">[\s\S]*?id="meta-supervisor"/.test(reportMeta) &&
+      /<div className="order-2">[\s\S]*?id="meta-target"/.test(reportMeta) &&
+      /<div className="order-4">[\s\S]*?id="meta-committee"/.test(reportMeta) &&
+      (reportDashboard.match(/<Leaderboard embedded/g) || []).length === 1 &&
+      reportDashboard.indexOf('<Leaderboard embedded') > reportDashboard.indexOf('onTargetChange={(v) => handleFormChange'));
 
     await connectDB();
     server = app.listen(0);
