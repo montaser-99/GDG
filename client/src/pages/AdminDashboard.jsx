@@ -7,7 +7,7 @@ import { useToast } from '../context/ToastContext';
 const EMPTY_FORM = { name: '', email: '', password: '', role: 'supervisor', committee: '', isActive: true };
 const roleOptions = [
   { value: 'head_hr', label: 'Admin / Head HR' },
-  { value: 'leaderboard_viewer', label: 'Leaderboard (قراءة فقط)' },
+  { value: 'leaderboard_viewer', label: 'تقارير اللجان (Leaderboard)' },
   { value: 'supervisor', label: 'Supervisor' },
 ];
 

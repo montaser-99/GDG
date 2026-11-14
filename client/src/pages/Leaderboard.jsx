@@ -96,7 +96,7 @@ export default function Leaderboard({ onOpenReport }) {
       <div className="leaderboard-page-heading">
         <div>
           <p className="eyebrow">مؤشرات الأداء الشهرية</p>
-          <h1>ترتيب اللجان والتحليلات</h1>
+          <h1>تقارير اللجان والتحليلات</h1>
           <p className="page-description">مقارنة مبنية على التقارير المحفوظة، مع وصول سريع لتقرير كل لجنة.</p>
         </div>
         <div className="leaderboard-controls">
@@ -245,7 +245,7 @@ export default function Leaderboard({ onOpenReport }) {
 
       <section className="leaderboard-section leaderboard-panel rankings-panel">
         <div className="section-title-row rankings-heading">
-          <div><p className="eyebrow">كل النتائج</p><h2>ترتيب اللجان</h2></div>
+          <div><p className="eyebrow">كل النتائج</p><h2>تقارير اللجان</h2></div>
           <label className="search-field">
             <i className="fa-solid fa-magnifying-glass" aria-hidden="true" />
             <span className="sr-only">ابحث عن لجنة أو مشرف</span>

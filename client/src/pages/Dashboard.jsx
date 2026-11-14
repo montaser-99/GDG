@@ -225,6 +225,10 @@ export default function Dashboard() {
 
   const navigateToView = async (nextView) => {
     if (nextView === activeView) return;
+    if (nextView === 'leaderboard' && user?.role === 'supervisor') {
+      showToast('Only LeaderBoard', 'error');
+      return;
+    }
     if (isEditMode) {
       const saved = await saveCurrentEvaluation(true);
       if (!saved) return;
@@ -234,6 +238,10 @@ export default function Dashboard() {
   };
 
   const openCommitteeReport = async ({ committeeId: nextCommitteeId, committeeType: nextType, month: nextMonth }) => {
+    if (user?.role === 'supervisor') {
+      showToast('Only LeaderBoard', 'error');
+      return;
+    }
     if (isEditMode) {
       const saved = await saveCurrentEvaluation(true);
       if (!saved) return;
@@ -381,7 +389,7 @@ export default function Dashboard() {
 
       {activeView === 'admin' && user?.role === 'head_hr' ? (
         <AdminDashboard />
-      ) : activeView === 'leaderboard' ? (
+      ) : activeView === 'leaderboard' && user?.role !== 'supervisor' ? (
         <Leaderboard onOpenReport={openCommitteeReport} />
       ) : (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
@@ -393,7 +401,7 @@ export default function Dashboard() {
           month={month}
           months={monthOptions}
           committeeOptions={committeeOptions}
-          canSelectCommittees={user?.role === 'head_hr'}
+          canSelectCommittees={user?.role === 'head_hr' || user?.role === 'leaderboard_viewer'}
           supervisorEditable={user?.role === 'head_hr'}
           supervisor={form.supervisor}
           target={form.target}

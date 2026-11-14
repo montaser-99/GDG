@@ -40,7 +40,7 @@ export default function Header({
               onClick={() => onNavigate('leaderboard')}
             >
               <i className="fa-solid fa-chart-column" aria-hidden="true" />
-              <span>ترتيب اللجان</span>
+              <span>تقارير اللجان</span>
             </button>
           )}
           {canManageUsers && (

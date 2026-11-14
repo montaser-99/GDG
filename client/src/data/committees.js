@@ -13,7 +13,7 @@ export const committeesData = {
     { id: 'DataAnalysis', name: 'تحليل البيانات (Data Analysis)' },
     { id: 'SoftwareEngineering', name: 'هندسة البرمجيات (Software Engineering)' },
     { id: 'UIUX', name: 'تصميم واجهة وتجربة المستخدم (UI/UX)' },
-{ id: 'Web', name: 'تطوير الويب (Web Development)' },
+    { id: 'Frontend', name: 'تطوير الواجهات الأمامية (Frontend)' },
     { id: 'CyberSecurity', name: 'الأمن السيبراني (Cybersecurity)' },
   ],
 };

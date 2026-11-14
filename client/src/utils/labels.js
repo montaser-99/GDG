@@ -1,7 +1,7 @@
 // Display labels for the backend role enum values (backend remains authoritative).
 const ROLE_LABELS = {
   head_hr: 'مسؤول الموارد البشرية (Head HR)',
-  leaderboard_viewer: 'مشاهد لوحة الترتيب (Leaderboard)',
+  leaderboard_viewer: 'تقارير اللجان (Leaderboard)',
   supervisor: 'مشرف اللجنة (Supervisor)',
   member: 'عضو فريق (Member)',
 };
