@@ -19,30 +19,53 @@ export function computeScore(attendanceRate, commScore, deadlineScore) {
 }
 
 const BADGE_BASE =
-  'inline-block mt-2 px-2.5 py-0.5 text-xs font-semibold rounded-full border print-badge';
+  'inline-block mt-2 px-3 py-1 text-xs font-bold rounded-full border print-badge';
 
 export function getScoreBadge(score) {
-  if (score >= 90) {
+  const numericScore = Number(score) || 0;
+
+  if (numericScore >= 90) {
     return {
       text: 'ممتاز مرتفع',
       className: `${BADGE_BASE} bg-emerald-500/20 text-emerald-400 border-emerald-500/30`,
+      badgeClass: 'rating-badge rating-badge-excellent',
+      tone: 'tone-green',
+      description: 'أداء متميز وتفاعل استثنائي',
     };
   }
-  if (score >= 80) {
+  if (numericScore >= 80) {
     return {
-      text: 'جيد جداً مرتفع',
-      className: `${BADGE_BASE} bg-emerald-500/20 text-emerald-400 border-emerald-500/30`,
+      text: 'ممتاز',
+      className: `${BADGE_BASE} bg-teal-500/20 text-teal-400 border-teal-500/30`,
+      badgeClass: 'rating-badge rating-badge-great',
+      tone: 'tone-green',
+      description: 'التزام عالي ومخرجات منتظمة',
     };
   }
-  if (score >= 70) {
+  if (numericScore >= 70) {
+    return {
+      text: 'جيد جداً',
+      className: `${BADGE_BASE} bg-blue-500/20 text-blue-400 border-blue-500/30`,
+      badgeClass: 'rating-badge rating-badge-very-good',
+      tone: 'tone-blue',
+      description: 'أداء مستقر مع التزام جيد',
+    };
+  }
+  if (numericScore >= 60) {
     return {
       text: 'جيد',
-      className: `${BADGE_BASE} bg-gdg-yellow/20 text-gdg-yellow border-gdg-yellow/30`,
+      className: `${BADGE_BASE} bg-amber-500/20 text-amber-400 border-amber-500/30`,
+      badgeClass: 'rating-badge rating-badge-good',
+      tone: 'tone-yellow',
+      description: 'يحتاج تحسين بعض النقاط',
     };
   }
   return {
-    text: 'يحتاج لمتابعة',
-    className: `${BADGE_BASE} bg-gdg-red/20 text-gdg-red border-gdg-red/30`,
+    text: 'يحتاج للمتابعة',
+    className: `${BADGE_BASE} bg-rose-500/20 text-rose-400 border-rose-500/30`,
+    badgeClass: 'rating-badge rating-badge-attention',
+    tone: 'tone-red',
+    description: 'يتطلب مراجعة من المشرف والـ HR',
   };
 }
 

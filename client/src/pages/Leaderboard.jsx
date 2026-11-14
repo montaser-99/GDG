@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MONTHS } from '../data/committees';
 import { api } from '../utils/api';
+import { getScoreBadge } from '../utils/calculations';
 
 const EMPTY_DATA = {
   summary: { totalCommittees: 0, avgOverallScore: 0, avgAttendance: 0, avgDeadline: 0, totalMeetings: 0 },
@@ -133,35 +134,9 @@ export default function Leaderboard({ onOpenReport }) {
 
       <section className="leaderboard-stat-grid" aria-label="ملخص الشهر">
         <Stat label="تقارير محفوظة" value={data.summary.totalCommittees} detail="لجنة خلال الشهر" icon="fa-people-group" tone="tone-blue" />
-        <Stat label="متوسط التقييم" value={`${data.summary.avgOverallScore}%`} detail="من 100 نقطة" icon="fa-chart-line" tone="tone-green" />
+        <Stat label="المستوى العام" value={data.summary.totalCommittees ? getScoreBadge(data.summary.avgOverallScore).text : '—'} detail="مستوى أداء اللجان هذا الشهر" icon="fa-chart-line" tone="tone-green" />
         <Stat label="متوسط الحضور" value={`${data.summary.avgAttendance}%`} detail="من بيانات الاجتماعات" icon="fa-user-check" tone="tone-yellow" />
         <Stat label="الاجتماعات" value={data.summary.totalMeetings} detail={`إنجاز المهام ${data.summary.avgDeadline}%`} icon="fa-calendar-check" tone="tone-red" />
-      </section>
-
-      <section className="leaderboard-section">
-        <div className="section-title-row">
-          <div>
-            <p className="eyebrow">أفضل النتائج المسجلة</p>
-            <h2>المراكز الأولى</h2>
-          </div>
-          <span className="section-meta">{month}</span>
-        </div>
-        {loading ? <div className="leaderboard-loading" role="status">جاري تحميل التقارير…</div> : data.podium.length ? (
-          <div className="leaderboard-podium">
-            {data.podium.map((item) => (
-              <article className={`podium-card podium-rank-${item.rank}`} key={item.id}>
-                <span className="podium-rank">{String(item.rank).padStart(2, '0')}</span>
-                <div className="podium-main">
-                  <span className="committee-type">{item.committeeType === 'tech' ? 'تقنية' : 'غير تقنية'}</span>
-                  <h3>{item.committeeName}</h3>
-                  <p>{item.supervisor || 'المشرف غير مسجل'}</p>
-                </div>
-                <div className="podium-score"><strong>{item.overallScore}</strong><span>/ 100</span></div>
-                <button type="button" className="text-action" onClick={() => openReport(item)}>التقرير <i className="fa-solid fa-arrow-left" aria-hidden="true" /></button>
-              </article>
-            ))}
-          </div>
-        ) : <div className="leaderboard-empty">مفيش تقارير محفوظة للشهر ده لحد دلوقتي.</div>}
       </section>
 
       <section className="analytics-grid">
@@ -174,7 +149,7 @@ export default function Leaderboard({ onOpenReport }) {
             <div className="comparison-list">
               {data.rankings.slice(0, 8).map((item) => (
                 <div className="comparison-row" key={item.id}>
-                  <div className="comparison-label"><span>{item.committeeName}</span><strong>{item.overallScore}</strong></div>
+                  <div className="comparison-label"><span>{item.committeeName}</span><span className={getScoreBadge(item.overallScore).badgeClass}>{getScoreBadge(item.overallScore).text}</span></div>
                   <div className="comparison-track" aria-label={`التقييم ${item.overallScore}%`}><span style={{ width: `${item.overallScore}%` }} /></div>
                   <div className="comparison-sub"><span>الحضور</span><strong>{item.attendanceRate}%</strong></div>
                 </div>
@@ -223,7 +198,7 @@ export default function Leaderboard({ onOpenReport }) {
           tone="tone-red"
           items={data.insights.needsAttention}
           empty="مفيش تقارير مسجلة حاليًا."
-          renderItem={(item) => <><strong>{item.committeeName} · {item.overallScore}%</strong><small>{item.issues.length ? item.issues.join('، ') : 'راجع التقرير مع اللجنة لتحديد الخطوة التالية.'}</small></>}
+          renderItem={(item) => <><strong>{item.committeeName} · {getScoreBadge(item.overallScore).text}</strong><small>{item.issues.length ? item.issues.join('، ') : 'راجع التقرير مع اللجنة لتحديد الخطوة التالية.'}</small></>}
         />
         <InsightPanel
           title="تنبيهات مسجلة"
@@ -262,7 +237,7 @@ export default function Leaderboard({ onOpenReport }) {
                     <td><span className="rank-pill">{item.rank}</span></td>
                     <td><strong>{item.committeeName}</strong><small>{item.committeeType === 'tech' ? 'تقنية' : 'غير تقنية'}</small></td>
                     <td>{item.supervisor || '—'}</td>
-                    <td><strong className="score-value">{item.overallScore}<small>/100</small></strong></td>
+                    <td><span className={getScoreBadge(item.overallScore).badgeClass}>{getScoreBadge(item.overallScore).text}</span></td>
                     <td>{item.attendanceRate}%</td>
                     <td>{item.completedTasks}/{item.totalTasks}</td>
                     <td><button type="button" className="text-action" onClick={() => openReport(item)}>فتح التقرير</button></td>

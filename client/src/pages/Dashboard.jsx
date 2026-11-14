@@ -319,7 +319,7 @@ export default function Dashboard() {
       committeeName,
       month,
       supervisor: form.supervisor,
-      scoreText: `${score} / 100`,
+      scoreText: scoreBadge.text,
       meetingsCount: meetings.length,
       attendanceText: `${attendanceRate}%`,
       attendanceNotes: form.attendanceNotes,

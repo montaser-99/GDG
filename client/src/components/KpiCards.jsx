@@ -4,9 +4,9 @@ export default function KpiCards({ score, scoreBadge, attendanceRate, meetingsCo
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8" aria-label="ملخص أداء اللجنة">
       <article className="glass-card print-card rounded-2xl p-5 border-l-4 border-l-gdg-blue">
-        <p className="text-xs font-bold text-slate-400">التقييم الشامل</p>
-        <h2 className="text-3xl font-extrabold text-white mt-2" id="kpi-score-display">{score} / 100</h2>
-        <span className={scoreBadge.className} id="kpi-status-badge">{scoreBadge.text}</span>
+        <p className="text-xs font-bold text-slate-400">تقييم أداء اللجنة</p>
+        <h2 className="text-2xl font-extrabold text-white mt-2" id="kpi-score-display">{scoreBadge.text}</h2>
+        <span className={scoreBadge.className} id="kpi-status-badge">{scoreBadge.description}</span>
       </article>
 
       <article className="glass-card print-card rounded-2xl p-5 border-l-4 border-l-gdg-green">
