@@ -12,19 +12,23 @@ export default function DeliverablesSection({ deliverables, isEditMode, onChange
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5">
             <i className="fa-solid fa-box-archive text-gdg-yellow"></i> أهم المخرجات والإنجازات المحققة
           </label>
           <textarea
             id="monthly-deliverables"
-            rows="3"
+            rows="4"
             value={deliverables}
             readOnly={!isEditMode}
             onChange={(e) => onChange('deliverables', e.target.value)}
-            className="w-full bg-slate-900/60 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-gdg-blue transition read-only:bg-transparent read-only:border-none read-only:p-0"
+            className="w-full bg-slate-900/60 border border-slate-300 rounded-xl p-3 text-sm leading-relaxed text-slate-800 placeholder-slate-400 focus:outline-none focus:border-gdg-blue focus:ring-2 focus:ring-blue-400/20 transition min-h-[105px] resize-y read-only:bg-transparent read-only:border-none read-only:p-0 read-only:resize-none print:hidden"
+            style={{ fieldSizing: 'content' }}
           ></textarea>
+          <div className="hidden print:block whitespace-pre-wrap break-words text-slate-900 font-bold text-xs leading-relaxed pt-1">
+            {deliverables || '—'}
+          </div>
         </div>
       </div>
     </section>

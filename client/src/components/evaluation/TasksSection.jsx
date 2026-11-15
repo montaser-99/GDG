@@ -121,8 +121,11 @@ export default function TasksSection({ tasks, isEditMode, onAdd, onRemove, onUpd
                       value={t.text}
                       onChange={(e) => onUpdate(idx, 'text', e.target.value)}
                       placeholder="عنوان تفاصيل المهمة"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-100 font-semibold focus:outline-none focus:border-gdg-blue"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-100 font-semibold focus:outline-none focus:border-gdg-blue print:hidden"
                     />
+                    <div className="hidden print:block whitespace-pre-wrap break-words text-slate-900 font-semibold text-xs">
+                      {t.text}
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] text-slate-400 shrink-0">
                         <i className="fa-solid fa-user-tag text-[10px]"></i> المكلف:
@@ -132,8 +135,11 @@ export default function TasksSection({ tasks, isEditMode, onAdd, onRemove, onUpd
                         value={t.assigned}
                         onChange={(e) => onUpdate(idx, 'assigned', e.target.value)}
                         placeholder="اسم/فريق العضو المسند إليه"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-gdg-blue"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-gdg-blue print:hidden"
                       />
+                      <span className="hidden print:inline whitespace-pre-wrap break-words text-slate-900 font-semibold text-xs">
+                        {t.assigned}
+                      </span>
                     </div>
                   </div>
 

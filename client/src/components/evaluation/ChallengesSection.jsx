@@ -1,5 +1,5 @@
 const textareaClass =
-  'w-full bg-slate-900/60 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-gdg-blue transition read-only:bg-transparent read-only:border-none read-only:p-0';
+  'w-full bg-slate-900/60 border border-slate-300 rounded-xl p-3 text-sm leading-relaxed text-slate-800 placeholder-slate-400 focus:outline-none focus:border-gdg-blue focus:ring-2 focus:ring-blue-400/20 transition resize-y min-h-[105px] read-only:bg-transparent read-only:border-none read-only:p-0 read-only:resize-none print:hidden';
 
 export default function ChallengesSection({ challenges, solutions, isEditMode, onChange }) {
   return (
@@ -15,33 +15,41 @@ export default function ChallengesSection({ challenges, solutions, isEditMode, o
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5">
             <i className="fa-solid fa-triangle-exclamation text-amber-400"></i> التحديات التي واجهت عمل اللجنة
           </label>
           <textarea
             id="committee-challenges"
-            rows="3"
+            rows="4"
             value={challenges}
             readOnly={!isEditMode}
             onChange={(e) => onChange('challenges', e.target.value)}
             className={textareaClass}
+            style={{ fieldSizing: 'content' }}
           ></textarea>
+          <div className="hidden print:block whitespace-pre-wrap break-words text-slate-900 font-bold text-xs leading-relaxed pt-1">
+            {challenges || '—'}
+          </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1">
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5">
             <i className="fa-solid fa-lightbulb text-gdg-green"></i> الحلول والإجراءات المتخذة
           </label>
           <textarea
             id="committee-solutions"
-            rows="3"
+            rows="4"
             value={solutions}
             readOnly={!isEditMode}
             onChange={(e) => onChange('solutions', e.target.value)}
             className={textareaClass}
+            style={{ fieldSizing: 'content' }}
           ></textarea>
+          <div className="hidden print:block whitespace-pre-wrap break-words text-slate-900 font-bold text-xs leading-relaxed pt-1">
+            {solutions || '—'}
+          </div>
         </div>
       </div>
     </section>

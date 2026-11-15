@@ -56,6 +56,22 @@ body {
     font-weight: bold !important;
     appearance: none;
   }
+  textarea {
+    height: auto !important;
+    min-height: unset !important;
+    max-height: none !important;
+    overflow: visible !important;
+    field-sizing: content !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    resize: none !important;
+    display: block !important;
+  }
+  .glass-card,
+  .print-card,
+  .print-card * {
+    overflow: visible !important;
+  }
   .text-white,
   .text-slate-200,
   .text-slate-300,

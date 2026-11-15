@@ -182,8 +182,11 @@ export default function MeetingsSection({
                 value={m.notes}
                 readOnly={!isEditMode}
                 onChange={(e) => onUpdate(idx, 'notes', e.target.value)}
-                className="w-full text-xs text-slate-300 bg-transparent focus:outline-none"
+                className="w-full text-xs text-slate-300 bg-transparent focus:outline-none print:hidden"
               />
+              <div className="hidden print:block whitespace-pre-wrap break-words text-slate-900 font-bold text-xs">
+                {m.notes || '—'}
+              </div>
             </div>
           </div>
         ))}
@@ -196,12 +199,16 @@ export default function MeetingsSection({
         </label>
         <textarea
           id="attendance-notes"
-          rows="2"
+          rows="3"
           value={attendanceNotes}
           readOnly={!isEditMode}
           onChange={(e) => onAttendanceNotesChange(e.target.value)}
-          className="w-full bg-slate-800/60 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-gdg-blue transition read-only:bg-transparent read-only:border-none read-only:p-0"
+          className="w-full bg-slate-800/60 border border-slate-300 rounded-xl p-3 text-sm leading-relaxed text-slate-800 placeholder-slate-400 focus:outline-none focus:border-gdg-blue focus:ring-2 focus:ring-blue-400/20 transition min-h-[90px] resize-y read-only:bg-transparent read-only:border-none read-only:p-0 read-only:resize-none print:hidden"
+          style={{ fieldSizing: 'content' }}
         ></textarea>
+        <div className="hidden print:block whitespace-pre-wrap break-words text-slate-900 font-bold text-xs leading-relaxed pt-1">
+          {attendanceNotes || '—'}
+        </div>
       </div>
     </section>
   );
