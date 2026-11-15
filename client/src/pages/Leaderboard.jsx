@@ -190,7 +190,7 @@ export default function Leaderboard({ onOpenReport }) {
           tone="tone-yellow"
           items={data.insights.bestMembers}
           empty="مفيش ترشيحات أعضاء مسجلة للشهر ده."
-          renderItem={(item) => <><strong>{item.bestMember}</strong><small>{item.committeeName}</small></>}
+          renderItem={(item) => <><strong>{item.committeeName}</strong><small>{item.bestMember}</small></>}
         />
         <InsightPanel
           title="نقاط تستحق المتابعة"
